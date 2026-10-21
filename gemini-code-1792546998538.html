@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catatan Laporan Harian ASN / PPPK - Kementerian Sosial RI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .glass-card { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px); border: 1px solid rgba(226, 232, 240, 0.6); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-red-500 selection:text-white">
+
+    <!-- KONFIGURASI APLIKASI -->
+    <script>
+        const IS_PREVIEW = true; 
+        const SUPABASE_URL = "https://your-project.supabase.co";
+        const SUPABASE_ANON_KEY = "your-anon-key";
+    </script>
+
+    <div id="app" class="min-h-screen flex flex-col">
+        <!-- Render dinamis via JavaScript -->
+    </div>
+
+    <script>
+        // --- INISIALISASI STORAGE LOKAL ---
+        if (!localStorage.getItem('kemsos_pegawai')) {
+            localStorage.setItem('kemsos_pegawai', JSON.stringify([
+                { id: '1', nip: '198501012010121001', nama: 'Budi Santoso, S.Sos', jabatan: 'Penyuluh Sosial Ahli Pertama', unit_kerja: 'Direktorat Perlindungan Sosial Korban Bencana', password: 'password' }
+            ]));
+        }
+
+        if (!localStorage.getItem('kemsos_laporan')) {
+            localStorage.setItem('kemsos_laporan', JSON.stringify([
+                { id: '101', pegawai_id: '1', tanggal: '2026-06-01', uraian_kegiatan: 'Melakukan asesmen korban bencana sosial di wilayah Jakarta Selatan', volume: '25 KPM', lokasi: 'Kantor Sinas Sosial Jaksel', foto_url: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500', status: 'Disetujui' }
+            ]));
+        }
+
+        let state = {
+            view: 'login', // login, register, dashboard, input, riwayat, profil
+            user: null,
+            notification: null
+        };
+
+        let supabaseClient = null;
+
+        function initSupabase() {
+            if (!IS_PREVIEW && window.supabase) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            state.notification = { message, type };
+            render();
+            setTimeout(() => {
+                state.notification = null;
+                render();
+            }, 3500);
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            if (state.notification) {
+                const notifEl = document.createElement('div');
+                notifEl.className = `fixed top-5 right-5 z-50 px-5 py-3 rounded-xl shadow-lg text-white font-medium flex items-center gap-3 transition-all transform translate-y-0 ${state.notification.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
+                notifEl.innerHTML = `<i data-lucide="${state.notification.type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-5 h-5"></i><span>${state.notification.message}</span>`;
+                app.appendChild(notifEl);
+            }
+
+            if (!state.user) {
+                if (state.view === 'register') {
+                    app.appendChild(renderRegister());
+                } else {
+                    app.appendChild(renderLogin());
+                }
+            } else {
+                app.appendChild(renderMainLayout());
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- HALAMAN LOGIN ---
+        function renderLogin() {
+            const container = document.createElement('div');
+            container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
+            
+            container.innerHTML = `
+                <div class="max-w-md w-full glass p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-red-600 text-white rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-red-600/30 mb-4">
+                            <i data-lucide="shield-check" class="w-8 h-8"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold text-slate-900">Kementerian Sosial RI</h1>
+                        <p class="text-sm text-slate-500 mt-1">Catatan Laporan Harian ASN / PPPK</p>
+                    </div>
+
+                    <div class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                        <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                        <div>Demo Akun: NIP <code class="bg-amber-100 px-1 py-0.5 rounded font-bold">198501012010121001</code> & Sandi <code class="bg-amber-100 px-1 py-0.5 rounded font-bold">password</code></div>
+                    </div>
+
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nomor Induk Pegawai (NIP)</label>
+                            <input type="text" id="login-nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Masukkan NIP...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kata Sandi (Password)</label>
+                            <input type="password" id="login-password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2">
+                            <i data-lucide="log-in" class="w-5 h-5"></i> Masuk Aplikasi
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center text-sm text-slate-600">
+                        Belum punya akun pegawai? <button onclick="state.view='register'; render();" class="text-red-600 font-semibold hover:underline">Daftar di sini</button>
+                    </div>
+                </div>
+            `;
+
+            container.querySelector('#login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const nip = document.getElementById('login-nip').value.trim();
+                const password = document.getElementById('login-password').value;
+
+                const pegawaiList = JSON.parse(localStorage.getItem('kemsos_pegawai')) || [];
+                const found = pegawaiList.find(p => p.nip === nip && p.password === password);
+
+                if (found) {
+                    state.user = found;
+                    state.view = 'dashboard';
+                    showNotification('Berhasil masuk sebagai ' + found.nama);
+                } else {
+                    showNotification('NIP atau Password salah!', 'error');
+                }
+            });
+
+            return container;
+        }
+
+        // --- HALAMAN REGISTRASI ---
+        function renderRegister() {
+            const container = document.createElement('div');
+            container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
+            
+            container.innerHTML = `
+                <div class="max-w-md w-full glass p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
+                    <div class="text-center mb-6">
+                        <h1 class="text-2xl font-bold text-slate-900">Registrasi Pegawai</h1>
+                        <p class="text-sm text-slate-500 mt-1">Pendaftaran Akun ASN / PPPK Kemensos</p>
+                    </div>
+
+                    <form id="register-form" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">NIP / Nomor PPPK</label>
+                            <input type="text" id="reg-nip" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Contoh: 1990...лет">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nama Lengkap & Gelar</label>
+                            <input type="text" id="reg-nama" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Nama lengkap...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jabatan</label>
+                            <input type="text" id="reg-jabatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Jabatan fungsional/umum...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unit Kerja / Direktorat</label>
+                            <input type="text" id="reg-unit" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Unit kerja...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kata Sandi (Password)</label>
+                            <input type="password" id="reg-password" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition mt-2">
+                            Daftarkan Akun
+                        </button>
+                    </form>
+
+                    <div class="mt-4 text-center text-sm text-slate-600">
+                        Sudah punya akun? <button onclick="state.view='login'; render();" class="text-red-600 font-semibold hover:underline">Masuk di sini</button>
+                    </div>
+                </div>
+            `;
+
+            container.querySelector('#register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const nip = document.getElementById('reg-nip').value.trim();
+                const nama = document.getElementById('reg-nama').value.trim();
+                const jabatan = document.getElementById('reg-jabatan').value.trim();
+                const unit_kerja = document.getElementById('reg-unit').value.trim();
+                const password = document.getElementById('reg-password').value;
+
+                let pegawaiList = JSON.parse(localStorage.getItem('kemsos_pegawai')) || [];
+                
+                if (pegawaiList.some(p => p.nip === nip)) {
+                    showNotification('NIP tersebut sudah terdaftar!', 'error');
+                    return;
+                }
+
+                const newPegawai = {
+                    id: Date.now().toString(),
+                    nip,
+                    nama,
+                    jabatan,
+                    unit_kerja,
+                    password
+                };
+
+                pegawaiList.push(newPegawai);
+                localStorage.setItem('kemsos_pegawai', JSON.stringify(pegawaiList));
+
+                showNotification('Registrasi berhasil! Silakan masuk.');
+                state.view = 'login';
+                render();
+            });
+
+            return container;
+        }
+
+        // --- LAYOUT UTAMA ---
+        function renderMainLayout() {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'min-h-screen flex flex-col md:flex-row bg-slate-50';
+
+            const sidebar = document.createElement('aside');
+            sidebar.className = 'hidden md:flex flex-col w-64 glass border-r border-slate-200 p-6 shrink-0 fixed inset-y-0 z-20';
+            sidebar.innerHTML = `
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-10 h-10 bg-red-600 text-white rounded-xl flex items-center justify-center font-bold">KS</div>
+                    <div>
+                        <h2 class="font-bold text-sm leading-tight text-slate-900">Kemensos RI</h2>
+                        <span class="text-xs text-slate-500">E-Laporan ASN</span>
+                    </div>
+                </div>
+
+                <nav class="space-y-1.5 flex-1">
+                    <button onclick="state.view='dashboard'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'dashboard' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                    </button>
+                    <button onclick="state.view='input'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'input' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                        <i data-lucide="file-plus" class="w-5 h-5"></i> Input Laporan Harian
+                    </button>
+                    <button onclick="state.view='riwayat'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'riwayat' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                        <i data-lucide="history" class="w-5 h-5"></i> Riwayat & Unduh JPG
+                    </button>
+                    <button onclick="state.view='profil'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'profil' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                        <i data-lucide="user" class="w-5 h-5"></i> Profil Pegawai
+                    </button>
+                </nav>
+
+                <div class="pt-4 border-t border-slate-200">
+                    <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-red-600 hover:bg-red-50 transition">
+                        <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
+                    </button>
+                </div>
+            `;
+            wrapper.appendChild(sidebar);
+
+            const bottomNav = document.createElement('nav');
+            bottomNav.className = 'md:hidden fixed bottom-0 left-0 right-0 glass border-t border-slate-200 p-2 flex justify-around z-30 shadow-lg';
+            bottomNav.innerHTML = `
+                <button onclick="state.view='dashboard'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'dashboard' ? 'text-red-600' : 'text-slate-500'}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Home</span>
+                </button>
+                <button onclick="state.view='input'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'input' ? 'text-red-600' : 'text-slate-500'}">
+                    <i data-lucide="file-plus" class="w-5 h-5"></i><span>Input</span>
+                </button>
+                <button onclick="state.view='riwayat'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'riwayat' ? 'text-red-600' : 'text-slate-500'}">
+                    <i data-lucide="history" class="w-5 h-5"></i><span>Riwayat</span>
+                </button>
+                <button onclick="state.view='profil'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'profil' ? 'text-red-600' : 'text-slate-500'}">
+                    <i data-lucide="user" class="w-5 h-5"></i><span>Profil</span>
+                </button>
+            `;
+            wrapper.appendChild(bottomNav);
+
+            const main = document.createElement('main');
+            main.className = 'flex-1 md:ml-64 p-4 md:p-8 pb-24 md:pb-8 max-w-5xl mx-auto w-full';
+
+            const headerBar = document.createElement('header');
+            headerBar.className = 'flex items-center justify-between glass-card p-4 rounded-2xl mb-6 shadow-sm';
+            headerBar.innerHTML = `
+                <div>
+                    <h1 class="font-bold text-slate-800 text-lg">Selamat Datang, ${state.user.nama}</h1>
+                    <p class="text-xs text-slate-500">${state.user.jabatan} - ${state.user.unit_kerja}</p>
+                </div>
+                <button onclick="logout()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-semibold transition">
+                    <i data-lucide="log-out" class="w-4 h-4"></i><span>Keluar</span>
+                </button>
+            `;
+            main.appendChild(headerBar);
+
+            const viewContainer = document.createElement('div');
+            if (state.view === 'dashboard') {
+                viewContainer.appendChild(renderDashboardView());
+            } else if (state.view === 'input') {
+                viewContainer.appendChild(renderInputView());
+            } else if (state.view === 'riwayat') {
+                viewContainer.appendChild(renderRiwayatView());
+            } else if (state.view === 'profil') {
+                viewContainer.appendChild(renderProfilView());
+            }
+            main.appendChild(viewContainer);
+
+            wrapper.appendChild(main);
+            return wrapper;
+        }
+
+        // --- DASHBOARD VIEW ---
+        function renderDashboardView() {
+            const laporanList = JSON.parse(localStorage.getItem('kemsos_laporan')) || [];
+            const userLaporan = laporanList.filter(l => l.pegawai_id === state.user.id);
+            const totalKegiatan = userLaporan.length;
+            const disetujui = userLaporan.filter(l => l.status === 'Disetujui').length;
+
+            const div = document.createElement('div');
+            div.className = 'space-y-6';
+            div.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-red-600">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Total Laporan Saya</span>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">${totalKegiatan} Catatan</h3>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-500">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Status Disetujui</span>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">${disetujui} Laporan</h3>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Foto Dokumentasi</span>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">${userLaporan.filter(l => l.foto_url).length} Foto</h3>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-800">Aktivitas Laporan Terbaru</h3>
+                        <button onclick="state.view='input'; render();" class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold shadow-md hover:bg-red-700 transition">
+                            + Buat Laporan Baru
+                        </button>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        ${userLaporan.length === 0 ? '<p class="text-sm text-slate-500 py-4 text-center">Belum ada laporan harian yang dicatat.</p>' : 
+                            userLaporan.slice(-3).reverse().map(l => `
+                                <div class="py-3 flex items-center justify-between">
+                                    <div>
+                                        <p class="font-semibold text-sm text-slate-800">${l.uraian_kegiatan}</p>
+                                        <span class="text-xs text-slate-500">${l.tanggal} •${l.volume}</span>
+                                    </div>
+                                    <span class="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">${l.status}</span>
+                                </div>
+                            `).join('')}
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        // --- INPUT LAPORAN VIEW ---
+        function renderInputView() {
+            const div = document.createElement('div');
+            div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
+            div.innerHTML = `
+                <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+                    <i data-lucide="file-plus" class="w-5 h-5 text-red-600"></i> Form Catatan Laporan Harian
+                </h3>
+                <form id="laporan-form" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tanggal Kegiatan</label>
+                            <input type="date" id="lap-tanggal" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Volume / Satuan Hasil</label>
+                            <input type="text" id="lap-volume" placeholder="Contoh: 1 Dokumen / 50 KPM" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Uraian Tugas / Output Kegiatan</label>
+                        <textarea id="lap-uraian" rows="3" placeholder="Rincian kegiatan harian..." required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Lokasi Kegiatan</label>
+                        <input type="text" id="lap-lokasi" placeholder="Nama instansi / alamat / lokasi kegiatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unggah Foto Dokumentasi Kegiatan</label>
+                        <input type="file" id="lap-foto" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition">
+                        Simpan Laporan Harian
+                    </button>
+                </form>
+            `;
+
+            div.querySelector('#laporan-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const fotoInput = document.getElementById('lap-foto');
+                let fotoUrl = '';
+                
+                if (fotoInput.files && fotoInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(uploadEvent) {
+                        saveLaporanData(uploadEvent.target.result);
+                    };
+                    reader.readAsDataURL(fotoInput.files[0]);
+                } else {
+                    saveLaporanData('');
+                }
+            });
+
+            return div;
+        }
+
+        function saveLaporanData(fotoUrl) {
+            let laporanList = JSON.parse(localStorage.getItem('kemsos_laporan')) || [];
+            const newLap = {
+                id: Date.now().toString(),
+                pegawai_id: state.user.id,
+                tanggal: document.getElementById('lap-tanggal').value,
+                uraian_kegiatan: document.getElementById('lap-uraian').value,
+                volume: document.getElementById('lap-volume').value,
+                lokasi: document.getElementById('lap-lokasi').value,
+                foto_url: fotoUrl,
+                status: 'Pending'
+            };
+
+            laporanList.push(newLap);
+            localStorage.setItem('kemsos_laporan', JSON.stringify(laporanList));
+            showNotification('Laporan harian berhasil disimpan!');
+            state.view = 'riwayat';
+            render();
+        }
+
+        // --- RIWAYAT VIEW & DOWNLOAD JPG ---
+        function renderRiwayatView() {
+            const laporanList = JSON.parse(localStorage.getItem('kemsos_laporan')) || [];
+            const userLaporan = laporanList.filter(l => l.pegawai_id === state.user.id);
+            const div = document.createElement('div');
+            div.className = 'space-y-4';
+            div.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-bold text-slate-800 text-lg">Riwayat Laporan & Unduh Foto JPG</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${userLaporan.length === 0 ? '<p class="text-sm text-slate-500">Belum ada riwayat laporan.</p>' :
+                        userLaporan.map(l => `
+                            <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-semibold px-2.5 py-1 bg-red-50 text-red-600 rounded-lg">${l.tanggal}</span>
+                                        <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">${l.status}</span>
+                                    </div>
+                                    <p class="font-semibold text-slate-800 text-sm mb-1">${l.uraian_kegiatan}</p>
+                                    <p class="text-xs text-slate-500 mb-3">📍 ${l.lokasi} • Volume: ${l.volume}</p>
+                                </div>
+                                <div>
+                                    ${l.foto_url ? `
+                                        <img src="${l.foto_url}" class="w-full h-36 object-cover rounded-xl mt-2 border border-slate-100 mb-3">
+                                        <a href="${l.foto_url}" download="Dokumentasi_${l.tanggal}.jpg" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition">
+                                            <i data-lucide="download" class="w-4 h-4"></i> Unduh Foto (.JPG)
+                                        </a>
+                                    ` : '<p class="text-xs text-slate-400 italic">Tidak ada foto dokumentasi</p>'}
+                                </div>
+                            </div>
+                        `).join('')}
+                </div>
+            `;
+            return div;
+        }
+
+        // --- PROFIL VIEW ---
+        function renderProfilView() {
+            const div = document.createElement('div');
+            div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-xl mx-auto';
+            div.innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full mx-auto flex items-center justify-center text-2xl font-bold mb-3">
+                        ${state.user.nama.charAt(0)}
+                    </div>
+                    <h3 class="font-bold text-slate-900 text-lg">${state.user.nama}</h3>
+                    <p class="text-xs text-slate-500">NIP: ${state.user.nip}</p>
+                </div>
+                <div class="space-y-3 text-sm border-t border-slate-100 pt-4">
+                    <div class="flex justify-between py-2 border-b border-slate-50">
+                        <span class="text-slate-500">Jabatan</span>
+                        <span class="font-semibold text-slate-800">${state.user.jabatan}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-slate-50">
+                        <span class="text-slate-500">Unit Kerja</span>
+                        <span class="font-semibold text-slate-800">${state.user.unit_kerja}</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-slate-500">Instansi</span>
+                        <span class="font-semibold text-slate-800">Kementerian Sosial RI</span>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function logout() {
+            state.user = null;
+            state.view = 'login';
+            showNotification('Berhasil keluar akun.');
+            render();
+        }
+
+        initSupabase();
+        render();
+    </script>
+</body>
+</html>
