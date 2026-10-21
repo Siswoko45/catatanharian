@@ -19,9 +19,9 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased selection:bg-red-500 selection:text-white">
 
-    <!-- KONFIGURASI APLIKASI -->
+    <!-- KONFIGURASI SUPABASE -->
     <script>
-        const IS_PREVIEW = false; 
+        // Masukkan URL dan ANON KEY Supabase Anda di sini
         const SUPABASE_URL = "https://vzdlzjwsbqcayruvettr.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_9oTnQJTFNnzDxCC-c68Qiw_MCi_my_E";
     </script>
@@ -31,32 +31,21 @@
     </div>
 
     <script>
-        // --- INISIALISASI STORAGE LOKAL ---
-        if (!localStorage.getItem('kemsos_pegawai')) {
-            localStorage.setItem('kemsos_pegawai', JSON.stringify([
-                { id: '1', nip: '198501012010121001', nama: 'Budi Santoso, S.Sos', jabatan: 'Penyuluh Sosial Ahli Pertama', unit_kerja: 'Direktorat Perlindungan Sosial Korban Bencana', password: 'password' }
-            ]));
-        }
-
-        if (!localStorage.getItem('kemsos_laporan')) {
-            localStorage.setItem('kemsos_laporan', JSON.stringify([
-                { id: '101', pegawai_id: '1', tanggal: '2026-06-01', uraian_kegiatan: 'Melakukan asesmen korban bencana sosial di wilayah Jakarta Selatan', volume: '25 KPM', lokasi: 'Kantor Sinas Sosial Jaksel', foto_urls: ['https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500'], status: 'Disetujui' }
-            ]));
+        let supabaseClient = null;
+        try {
+            if (window.supabase && SUPABASE_URL.includes("http")) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {
+            console.error("Gagal menginisialisasi Supabase", e);
         }
 
         let state = {
             view: 'login', // login, register, dashboard, input, riwayat, profil
             user: null,
+            laporanList: [],
             notification: null
         };
-
-        let supabaseClient = null;
-
-        function initSupabase() {
-            if (!IS_PREVIEW && window.supabase) {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        }
 
         function showNotification(message, type = 'success') {
             state.notification = { message, type };
@@ -107,10 +96,10 @@
                         <p class="text-sm text-slate-500 mt-1">Catatan Laporan Harian ASN / PPPK</p>
                     </div>
 
-                    <div class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
-                        <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
-                        <div>Demo Akun: NIP <code class="bg-amber-100 px-1 py-0.5 rounded font-bold">198501012010121001</code> & Sandi <code class="bg-amber-100 px-1 py-0.5 rounded font-bold">password</code></div>
-                    </div>
+                    ${!supabaseClient ? `
+                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800">
+                        <strong>Perhatian:</strong> Konfigurasi Supabase URL & Anon Key di bagian atas kode belum diisi dengan benar.
+                    </div>` : ''}
 
                     <form id="login-form" class="space-y-4">
                         <div>
@@ -132,20 +121,34 @@
                 </div>
             `;
 
-            container.querySelector('#login-form').addEventListener('submit', (e) => {
+            container.querySelector('#login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (!supabaseClient) {
+                    showNotification('Supabase belum dikonfigurasi di dalam kode!', 'error');
+                    return;
+                }
+
                 const nip = document.getElementById('login-nip').value.trim();
                 const password = document.getElementById('login-password').value;
 
-                const pegawaiList = JSON.parse(localStorage.getItem('kemsos_pegawai')) || [];
-                const found = pegawaiList.find(p => p.nip === nip && p.password === password);
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('pegawai')
+                        .select('*')
+                        .eq('nip', nip)
+                        .eq('password', password)
+                        .single();
 
-                if (found) {
-                    state.user = found;
+                    if (error || !data) {
+                        throw new Error('NIP atau Password salah, atau akun belum terdaftar.');
+                    }
+
+                    state.user = data;
                     state.view = 'dashboard';
-                    showNotification('Berhasil masuk sebagai ' + found.nama);
-                } else {
-                    showNotification('NIP atau Password salah!', 'error');
+                    showNotification('Berhasil masuk sebagai ' + data.nama);
+                    fetchLaporanFromSupabase();
+                } catch (err) {
+                    showNotification(err.message, 'error');
                 }
             });
 
@@ -176,7 +179,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jabatan</label>
-                            <input type="text" id="reg-jabatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Jabatan fungsional/umum...">
+                            <input type="text" id="reg-jabatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Jabatan...">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unit Kerja / Direktorat</label>
@@ -197,36 +200,32 @@
                 </div>
             `;
 
-            container.querySelector('#register-form').addEventListener('submit', (e) => {
+            container.querySelector('#register-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (!supabaseClient) {
+                    showNotification('Supabase belum dikonfigurasi!', 'error');
+                    return;
+                }
+
                 const nip = document.getElementById('reg-nip').value.trim();
                 const nama = document.getElementById('reg-nama').value.trim();
                 const jabatan = document.getElementById('reg-jabatan').value.trim();
                 const unit_kerja = document.getElementById('reg-unit').value.trim();
                 const password = document.getElementById('reg-password').value;
 
-                let pegawaiList = JSON.parse(localStorage.getItem('kemsos_pegawai')) || [];
-                
-                if (pegawaiList.some(p => p.nip === nip)) {
-                    showNotification('NIP tersebut sudah terdaftar!', 'error');
-                    return;
+                try {
+                    const { error } = await supabaseClient
+                        .from('pegawai')
+                        .insert([{ nip, nama, jabatan, unit_kerja, password }]);
+
+                    if (error) throw error;
+
+                    showNotification('Registrasi berhasil! Silakan masuk.');
+                    state.view = 'login';
+                    render();
+                } catch (err) {
+                    showNotification('Gagal registrasi (NIP mungkin sudah terdaftar).', 'error');
                 }
-
-                const newPegawai = {
-                    id: Date.now().toString(),
-                    nip,
-                    nama,
-                    jabatan,
-                    unit_kerja,
-                    password
-                };
-
-                pegawaiList.push(newPegawai);
-                localStorage.setItem('kemsos_pegawai', JSON.stringify(pegawaiList));
-
-                showNotification('Registrasi berhasil! Silakan masuk.');
-                state.view = 'login';
-                render();
             });
 
             return container;
@@ -323,8 +322,7 @@
 
         // --- DASHBOARD VIEW ---
         function renderDashboardView() {
-            const laporanList = JSON.parse(localStorage.getItem('kemsos_laporan')) || [];
-            const userLaporan = laporanList.filter(l => l.pegawai_id === state.user.id);
+            const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
             const totalKegiatan = userLaporan.length;
             const disetujui = userLaporan.filter(l => l.status === 'Disetujui').length;
             const totalFoto = userLaporan.reduce((acc, l) => acc + (l.foto_urls ? l.foto_urls.length : 0), 0);
@@ -371,7 +369,7 @@
             return div;
         }
 
-        // --- INPUT LAPORAN VIEW (MULTIPLE PHOTOS) ---
+        // --- INPUT LAPORAN VIEW ---
         function renderInputView() {
             const div = document.createElement('div');
             div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
@@ -399,9 +397,8 @@
                         <input type="text" id="lap-lokasi" placeholder="Nama instansi / alamat / lokasi kegiatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unggah Foto Dokumentasi (Bisa Pilih Banyak Sekaligus)</label>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unggah Foto Dokumentasi (Bisa Pilih Banyak)</label>
                         <input type="file" id="lap-foto" accept="image/*" multiple class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
-                        <p class="text-xs text-slate-400 mt-1">Tekan tombol Ctrl / Shift di PC atau tahan beberapa foto di HP untuk memilih lebih dari satu.</p>
                     </div>
                     <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition">
                         Simpan Laporan Harian
@@ -415,7 +412,7 @@
                 const files = fotoInput.files;
 
                 if (files.length === 0) {
-                    saveLaporanData([]);
+                    saveLaporanToSupabase([]);
                     return;
                 }
 
@@ -428,7 +425,7 @@
                         fotoUrls.push(uploadEvent.target.result);
                         processed++;
                         if (processed === files.length) {
-                            saveLaporanData(fotoUrls);
+                            saveLaporanToSupabase(fotoUrls);
                         }
                     };
                     reader.readAsDataURL(file);
@@ -438,30 +435,49 @@
             return div;
         }
 
-        function saveLaporanData(fotoUrls) {
-            let laporanList = JSON.parse(localStorage.getItem('kemsos_laporan')) || [];
-            const newLap = {
-                id: Date.now().toString(),
-                pegawai_id: state.user.id,
-                tanggal: document.getElementById('lap-tanggal').value,
-                uraian_kegiatan: document.getElementById('lap-uraian').value,
-                volume: document.getElementById('lap-volume').value,
-                lokasi: document.getElementById('lap-lokasi').value,
-                foto_urls: fotoUrls,
-                status: 'Pending'
-            };
+        async function saveLaporanToSupabase(fotoUrls) {
+            try {
+                const newLap = {
+                    pegawai_id: state.user.id,
+                    tanggal: document.getElementById('lap-tanggal').value,
+                    uraian_kegiatan: document.getElementById('lap-uraian').value,
+                    volume: document.getElementById('lap-volume').value,
+                    lokasi: document.getElementById('lap-lokasi').value,
+                    foto_urls: fotoUrls,
+                    status: 'Pending'
+                };
 
-            laporanList.push(newLap);
-            localStorage.setItem('kemsos_laporan', JSON.stringify(laporanList));
-            showNotification('Laporan harian berhasil disimpan!');
-            state.view = 'riwayat';
-            render();
+                const { error } = await supabaseClient.from('laporan_harian').insert([newLap]);
+                if (error) throw error;
+
+                showNotification('Laporan harian berhasil disimpan!');
+                fetchLaporanFromSupabase();
+                state.view = 'riwayat';
+                render();
+            } catch (err) {
+                showNotification('Gagal menyimpan laporan ke database.', 'error');
+            }
+        }
+
+        async function fetchLaporanFromSupabase() {
+            if (!supabaseClient || !state.user) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('laporan_harian')
+                    .select('*')
+                    .eq('pegawai_id', state.user.id);
+                
+                if (!error && data) {
+                    state.laporanList = data;
+                    render();
+                }
+            } catch (err) {
+                console.error("Gagal mengambil data laporan", err);
+            }
         }
 
         // --- RIWAYAT VIEW & MULTIPLE DOWNLOAD JPG ---
         function renderRiwayatView() {
-            const laporanList = JSON.parse(localStorage.getItem('kemsos_laporan')) || [];
-            const userLaporan = laporanList.filter(l => l.pegawai_id === state.user.id);
             const div = document.createElement('div');
             div.className = 'space-y-4';
             div.innerHTML = `
@@ -469,8 +485,8 @@
                     <h3 class="font-bold text-slate-800 text-lg">Riwayat Laporan & Unduh Foto JPG</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    ${userLaporan.length === 0 ? '<p class="text-sm text-slate-500">Belum ada riwayat laporan.</p>' :
-                        userLaporan.map(l => `
+                    ${state.laporanList.length === 0 ? '<p class="text-sm text-slate-500">Belum ada riwayat laporan.</p>' :
+                        state.laporanList.map(l => `
                             <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col justify-between">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
@@ -533,12 +549,12 @@
 
         function logout() {
             state.user = null;
+            state.laporanList = [];
             state.view = 'login';
             showNotification('Berhasil keluar akun.');
             render();
         }
 
-        initSupabase();
         render();
     </script>
 </body>
