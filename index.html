@@ -41,7 +41,7 @@
         }
 
         let state = {
-            view: 'login', // login, register, dashboard, input, riwayat, profil
+            view: 'login', 
             user: null,
             laporanList: [],
             notification: null
@@ -124,7 +124,7 @@
             container.querySelector('#login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!supabaseClient) {
-                    showNotification('Supabase belum dikonfigurasi di dalam kode!', 'error');
+                    showNotification('Supabase belum dikonfigurasi!', 'error');
                     return;
                 }
 
@@ -369,7 +369,7 @@
             return div;
         }
 
-        // --- INPUT LAPORAN VIEW ---
+        // --- INPUT LAPORAN VIEW (DENGAN KOMPRESSI GAMBAR AMAN) ---
         function renderInputView() {
             const div = document.createElement('div');
             div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
@@ -400,36 +400,74 @@
                         <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unggah Foto Dokumentasi (Bisa Pilih Banyak)</label>
                         <input type="file" id="lap-foto" accept="image/*" multiple class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
                     </div>
-                    <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition">
+                    <button type="submit" id="btn-submit-lap" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition">
                         Simpan Laporan Harian
                     </button>
                 </form>
             `;
 
-            div.querySelector('#laporan-form').addEventListener('submit', (e) => {
+            div.querySelector('#laporan-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const btn = document.getElementById('btn-submit-lap');
+                btn.disabled = true;
+                btn.innerText = 'Menyimpan...';
+
                 const fotoInput = document.getElementById('lap-foto');
                 const files = fotoInput.files;
 
                 if (files.length === 0) {
-                    saveLaporanToSupabase([]);
+                    await saveLaporanToSupabase([]);
                     return;
                 }
 
                 let fotoUrls = [];
                 let processed = 0;
 
-                Array.from(files).forEach((file) => {
-                    const reader = new FileReader();
-                    reader.onload = function(uploadEvent) {
-                        fotoUrls.push(uploadEvent.target.result);
-                        processed++;
-                        if (processed === files.length) {
-                            saveLaporanToSupabase(fotoUrls);
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                });
+                // Fungsi kompresi gambar agar aman masuk database
+                const compressImage = (file) => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const MAX_WIDTH = 800;
+                                const MAX_HEIGHT = 800;
+                                let width = img.width;
+                                let height = img.height;
+
+                                if (width > height) {
+                                    if (width > MAX_WIDTH) {
+                                        height *= MAX_WIDTH / width;
+                                        width = MAX_WIDTH;
+                                    }
+                                } else {
+                                    if (height > MAX_HEIGHT) {
+                                        width *= MAX_HEIGHT / height;
+                                        height = MAX_HEIGHT;
+                                    }
+                                }
+
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+                                resolve(canvas.toDataURL('image/jpeg', 0.7)); // Kompres kualitas 70%
+                            };
+                            img.src = event.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                };
+
+                for (let i = 0; i < files.length; i++) {
+                    const compressedDataUrl = await compressImage(files[i]);
+                    fotoUrls.push(compressedDataUrl);
+                }
+
+                await saveLaporanToSupabase(fotoUrls);
+                btn.disabled = false;
+                btn.innerText = 'Simpan Laporan Harian';
             });
 
             return div;
@@ -437,6 +475,11 @@
 
         async function saveLaporanToSupabase(fotoUrls) {
             try {
+                if (!supabaseClient) {
+                    showNotification('Supabase belum terhubung!', 'error');
+                    return;
+                }
+
                 const newLap = {
                     pegawai_id: state.user.id,
                     tanggal: document.getElementById('lap-tanggal').value,
@@ -451,10 +494,11 @@
                 if (error) throw error;
 
                 showNotification('Laporan harian berhasil disimpan!');
-                fetchLaporanFromSupabase();
+                await fetchLaporanFromSupabase();
                 state.view = 'riwayat';
                 render();
             } catch (err) {
+                console.error(err);
                 showNotification('Gagal menyimpan laporan ke database.', 'error');
             }
         }
@@ -469,7 +513,6 @@
                 
                 if (!error && data) {
                     state.laporanList = data;
-                    render();
                 }
             } catch (err) {
                 console.error("Gagal mengambil data laporan", err);
