@@ -26,9 +26,7 @@
         const SUPABASE_ANON_KEY = "sb_publishable_9oTnQJTFNnzDxCC-c68Qiw_MCi_my_E";
     </script>
 
-    <div id="app" class="min-h-screen flex flex-col">
-        <!-- Render dinamis via JavaScript -->
-    </div>
+    <div id="app" class="min-h-screen flex flex-col"></div>
 
     <script>
         let supabaseClient = null;
@@ -80,7 +78,6 @@
             lucide.createIcons();
         }
 
-        // --- HALAMAN LOGIN ---
         function renderLogin() {
             const container = document.createElement('div');
             container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
@@ -95,11 +92,6 @@
                         <h1 class="text-2xl font-bold text-slate-900">Kementerian Sosial RI</h1>
                         <p class="text-sm text-slate-500 mt-1">Catatan Laporan Harian ASN / PPPK</p>
                     </div>
-
-                    ${!supabaseClient ? `
-                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800">
-                        <strong>Perhatian:</strong> Konfigurasi Supabase URL & Anon Key di bagian atas kode belum diisi dengan benar.
-                    </div>` : ''}
 
                     <form id="login-form" class="space-y-4">
                         <div>
@@ -139,23 +131,20 @@
                         .eq('password', password)
                         .single();
 
-                    if (error || !data) {
-                        throw new Error('NIP atau Password salah, atau akun belum terdaftar.');
-                    }
+                    if (error || !data) throw new Error('NIP atau Password salah.');
 
                     state.user = data;
                     state.view = 'dashboard';
                     showNotification('Berhasil masuk sebagai ' + data.nama);
-                    fetchLaporanFromSupabase();
+                    await fetchLaporanFromSupabase();
                 } catch (err) {
-                    showNotification(err.message, 'error');
+                    showNotification('NIP atau Password salah!', 'error');
                 }
             });
 
             return container;
         }
 
-        // --- HALAMAN REGISTRASI ---
         function renderRegister() {
             const container = document.createElement('div');
             container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
@@ -202,10 +191,7 @@
 
             container.querySelector('#register-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (!supabaseClient) {
-                    showNotification('Supabase belum dikonfigurasi!', 'error');
-                    return;
-                }
+                if (!supabaseClient) return;
 
                 const nip = document.getElementById('reg-nip').value.trim();
                 const nama = document.getElementById('reg-nama').value.trim();
@@ -224,14 +210,13 @@
                     state.view = 'login';
                     render();
                 } catch (err) {
-                    showNotification('Gagal registrasi (NIP mungkin sudah terdaftar).', 'error');
+                    showNotification('Gagal registrasi (NIP sudah terdaftar).', 'error');
                 }
             });
 
             return container;
         }
 
-        // --- LAYOUT UTAMA ---
         function renderMainLayout() {
             const wrapper = document.createElement('div');
             wrapper.className = 'min-h-screen flex flex-col md:flex-row bg-slate-50';
@@ -320,12 +305,14 @@
             return wrapper;
         }
 
-        // --- DASHBOARD VIEW ---
         function renderDashboardView() {
             const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
             const totalKegiatan = userLaporan.length;
             const disetujui = userLaporan.filter(l => l.status === 'Disetujui').length;
-            const totalFoto = userLaporan.reduce((acc, l) => acc + (l.foto_urls ? l.foto_urls.length : 0), 0);
+            const totalFoto = userLaporan.reduce((acc, l) => {
+                let urls = parseFotoUrls(l.foto_urls);
+                return acc + urls.length;
+            }, 0);
 
             const div = document.createElement('div');
             div.className = 'space-y-6';
@@ -369,7 +356,6 @@
             return div;
         }
 
-        // --- INPUT LAPORAN VIEW (DENGAN KOMPRESSI GAMBAR AMAN) ---
         function renderInputView() {
             const div = document.createElement('div');
             div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
@@ -414,16 +400,8 @@
 
                 const fotoInput = document.getElementById('lap-foto');
                 const files = fotoInput.files;
-
-                if (files.length === 0) {
-                    await saveLaporanToSupabase([]);
-                    return;
-                }
-
                 let fotoUrls = [];
-                let processed = 0;
 
-                // Fungsi kompresi gambar agar aman masuk database
                 const compressImage = (file) => {
                     return new Promise((resolve) => {
                         const reader = new FileReader();
@@ -431,8 +409,8 @@
                             const img = new Image();
                             img.onload = () => {
                                 const canvas = document.createElement('canvas');
-                                const MAX_WIDTH = 800;
-                                const MAX_HEIGHT = 800;
+                                const MAX_WIDTH = 600;
+                                const MAX_HEIGHT = 600;
                                 let width = img.width;
                                 let height = img.height;
 
@@ -452,7 +430,7 @@
                                 canvas.height = height;
                                 const ctx = canvas.getContext('2d');
                                 ctx.drawImage(img, 0, 0, width, height);
-                                resolve(canvas.toDataURL('image/jpeg', 0.7)); // Kompres kualitas 70%
+                                resolve(canvas.toDataURL('image/jpeg', 0.6));
                             };
                             img.src = event.target.result;
                         };
@@ -461,11 +439,11 @@
                 };
 
                 for (let i = 0; i < files.length; i++) {
-                    const compressedDataUrl = await compressImage(files[i]);
-                    fotoUrls.push(compressedDataUrl);
+                    const compressed = await compressImage(files[i]);
+                    fotoUrls.push(compressed);
                 }
 
-                await saveLaporanToSupabase(fotoUrls);
+                await saveLaporanToSupabase(JSON.stringify(fotoUrls));
                 btn.disabled = false;
                 btn.innerText = 'Simpan Laporan Harian';
             });
@@ -473,7 +451,7 @@
             return div;
         }
 
-        async function saveLaporanToSupabase(fotoUrls) {
+        async function saveLaporanToSupabase(fotoUrlsJson) {
             try {
                 if (!supabaseClient) {
                     showNotification('Supabase belum terhubung!', 'error');
@@ -486,7 +464,7 @@
                     uraian_kegiatan: document.getElementById('lap-uraian').value,
                     volume: document.getElementById('lap-volume').value,
                     lokasi: document.getElementById('lap-lokasi').value,
-                    foto_urls: fotoUrls,
+                    foto_urls: fotoUrlsJson,
                     status: 'Pending'
                 };
 
@@ -519,7 +497,18 @@
             }
         }
 
-        // --- RIWAYAT VIEW & MULTIPLE DOWNLOAD JPG ---
+        function parseFotoUrls(foto_urls) {
+            if (!foto_urls) return [];
+            try {
+                if (typeof foto_urls === 'string' && foto_urls.startsWith('[')) {
+                    return JSON.parse(foto_urls);
+                }
+                return [foto_urls];
+            } catch (e) {
+                return [foto_urls];
+            }
+        }
+
         function renderRiwayatView() {
             const div = document.createElement('div');
             div.className = 'space-y-4';
@@ -529,7 +518,9 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     ${state.laporanList.length === 0 ? '<p class="text-sm text-slate-500">Belum ada riwayat laporan.</p>' :
-                        state.laporanList.map(l => `
+                        state.laporanList.map(l => {
+                            let urls = parseFotoUrls(l.foto_urls);
+                            return `
                             <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col justify-between">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
@@ -540,9 +531,9 @@
                                     <p class="text-xs text-slate-500 mb-3">📍 ${l.lokasi} • Volume: ${l.volume}</p>
                                 </div>
                                 <div>
-                                    ${l.foto_urls && l.foto_urls.length > 0 ? `
+                                    ${urls.length > 0 ? `
                                         <div class="grid grid-cols-2 gap-2 mb-3">
-                                            ${l.foto_urls.map((url, idx) => `
+                                            ${urls.map((url, idx) => `
                                                 <div class="relative group">
                                                     <img src="${url}" class="w-full h-28 object-cover rounded-xl border border-slate-100">
                                                     <a href="${url}" download="Dokumentasi_${l.tanggal}_${idx + 1}.jpg" class="absolute bottom-1 right-1 bg-slate-900/80 hover:bg-slate-900 text-white p-1.5 rounded-lg text-xs flex items-center gap-1 backdrop-blur-sm transition">
@@ -554,13 +545,12 @@
                                     ` : '<p class="text-xs text-slate-400 italic mb-3">Tidak ada foto dokumentasi</p>'}
                                 </div>
                             </div>
-                        `).join('')}
+                        `;}).join('')}
                 </div>
             `;
             return div;
         }
 
-        // --- PROFIL VIEW ---
         function renderProfilView() {
             const div = document.createElement('div');
             div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-xl mx-auto';
