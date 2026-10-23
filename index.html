@@ -21,7 +21,6 @@
 
     <!-- KONFIGURASI SUPABASE -->
     <script>
-        // Masukkan URL dan ANON KEY Supabase Anda di sini
         const SUPABASE_URL = "https://vzdlzjwsbqcayruvettr.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_9oTnQJTFNnzDxCC-c68Qiw_MCi_my_E";
     </script>
@@ -38,11 +37,78 @@
             console.error("Gagal menginisialisasi Supabase", e);
         }
 
+        // Data Referensi RHK & Rencana Aksi (Sesuai Permintaan)
+        const REF_RHK_AKSI = [
+            {
+                rhk: "Terlaksananya penyaluran bansos kepada Keluarga Penerima Manfaat (KPM) PKH tepat sasaran dan tepat jumlah",
+                aksi: [
+                    "Melakukan edukasi dan sosialisasi pencairan secara tunai dan non tunai",
+                    "Melaksanakan Supervisi Permasalahan Bantuan Sosial",
+                    "Melaksanakan Monitoring/Pemantauan Penyaluran Bantuan Sosial",
+                    "Melaksanakan Penelitian penyaluran bantuan Sosial"
+                ]
+            },
+            {
+                rhk: "Terlaksananya pertemuan P2K2 sesuai dengan ketentuan",
+                aksi: [
+                    "Melaksanakan Pertemuan Peningkatan Kemampuan Keluarga (P2K2)"
+                ]
+            },
+            {
+                rhk: "Terlaksananya Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial secara akurat sesuai dengan ketentuan",
+                aksi: [
+                    "Melaksanakan Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial",
+                    "Melakukan pendampingan, mediasi, dan fasilitasi kepada KPM PKH dalam proses perubahan perilaku, pola pikir yang mandiri dan produktif"
+                ]
+            },
+            {
+                rhk: "Tersedianya Data KPM graduasi yang disusun sesuai dengan instrumen dan ketentuan",
+                aksi: [
+                    "Melakukan usulan KPM Graduasi mandiri dan Pemberdayaan PPSE"
+                ]
+            },
+            {
+                rhk: "Terlaksananya Verifikasi, Validasi dan Pemutakhiran Data KPM secara akurat sesuai dengan ketentuan",
+                aksi: [
+                    "Melaksanakan Pemutakhiran Data",
+                    "Melaksanakan proses bisnis PKH yang meliputi verifikasi validasi calon penerima bantuan sosial"
+                ]
+            },
+            {
+                rhk: "Terlaksananya kegiatan kasus adaptif (Respon kasus/pengaduan/bencana/kerentanan) disusun secara lengkap dan akurat",
+                aksi: [
+                    "Melaksanakan Respon Kasus/Pengaduan/bencana/Kerentanan"
+                ]
+            },
+            {
+                rhk: "Tersedianya Data Analisis Laporan Bulanan yang disusun sesuai dengan Ketentuan",
+                aksi: [
+                    "Membuat laporan bulanan pelaksanaan PKH dan laporan lainnya."
+                ]
+            },
+            {
+                rhk: "Terlaksananya direktif pimpinan sesuai dengan penugasan; program Kementrian Sosial",
+                aksi: [
+                    "Melaksanakan Tindak Lanjut Hasil Pemeriksaan (TLHP)",
+                    "Melakukan sosialisasi kebijakan dan bisnis proses PKH kepada aparat pemerintah tingkat kecamatan, desa/kelurahan, KPM PKH, dan masyarakat umum secara berkala melalui Pertemuan atau media sosial dll",
+                    "Mengikuti Rapat Koordinasi, Sosialisasi Kebijakan Proses Bisnis PKH dan Penguatan Kapasitas SDM.",
+                    "Tugas Lainnya (Penugasan lainnya program Kementrian Sosial)"
+                ]
+            },
+            {
+                rhk: "Terlaksananya Penyebaran Berita Baik Kementrian Sosial",
+                aksi: [
+                    "Berperan aktif dalam memanfaatkan, menggunakan, melibatkan dan menyebarkan Media Sosial untuk menyampaikan semua program di Kementerian Sosial"
+                ]
+            }
+        ];
+
         let state = {
             view: 'login', 
             user: null,
             laporanList: [],
-            notification: null
+            notification: null,
+            selectedMonth: new Date().toISOString().slice(0, 7) // Default bulan berjalan (YYYY-MM)
         };
 
         function showNotification(message, type = 'success') {
@@ -305,11 +371,19 @@
             return wrapper;
         }
 
+        // --- DASHBOARD VIEW DENGAN FILTER PER BULAN ---
         function renderDashboardView() {
             const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
-            const totalKegiatan = userLaporan.length;
-            const disetujui = userLaporan.filter(l => l.status === 'Disetujui').length;
-            const totalFoto = userLaporan.reduce((acc, l) => {
+            
+            // Filter laporan berdasarkan bulan yang dipilih (Format tanggal di DB: YYYY-MM-DD)
+            const filteredLaporan = userLaporan.filter(l => {
+                if (!l.tanggal) return false;
+                return l.tanggal.startsWith(state.selectedMonth);
+            });
+
+            const totalKegiatan = filteredLaporan.length;
+            const disetujui = filteredLaporan.filter(l => l.status === 'Disetujui').length;
+            const totalFoto = filteredLaporan.reduce((acc, l) => {
                 let urls = parseFotoUrls(l.foto_urls);
                 return acc + urls.length;
             }, 0);
@@ -317,9 +391,21 @@
             const div = document.createElement('div');
             div.className = 'space-y-6';
             div.innerHTML = `
+                <!-- Filter Bulan -->
+                <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800">Ringkasan Kinerja Bulanan</h3>
+                        <p class="text-xs text-slate-500">Pilih bulan untuk melihat rekapitulasi laporan harian.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-semibold text-slate-600 uppercase">Pilih Bulan:</label>
+                        <input type="month" id="filter-bulan" value="${state.selectedMonth}" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-red-500">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-red-600">
-                        <span class="text-xs text-slate-500 font-semibold uppercase">Total Laporan Saya</span>
+                        <span class="text-xs text-slate-500 font-semibold uppercase">Total Laporan Bulan Ini</span>
                         <h3 class="text-2xl font-bold text-slate-800 mt-1">${totalKegiatan} Catatan</h3>
                     </div>
                     <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-500">
@@ -334,18 +420,18 @@
 
                 <div class="glass-card p-6 rounded-2xl shadow-sm">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-slate-800">Aktivitas Laporan Terbaru</h3>
+                        <h3 class="font-bold text-slate-800">Aktivitas Laporan Bulan ${state.selectedMonth}</h3>
                         <button onclick="state.view='input'; render();" class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold shadow-md hover:bg-red-700 transition">
                             + Buat Laporan Baru
                         </button>
                     </div>
                     <div class="divide-y divide-slate-100">
-                        ${userLaporan.length === 0 ? '<p class="text-sm text-slate-500 py-4 text-center">Belum ada laporan harian yang dicatat.</p>' : 
-                            userLaporan.slice(-3).reverse().map(l => `
+                        ${filteredLaporan.length === 0 ? '<p class="text-sm text-slate-500 py-4 text-center">Belum ada laporan harian pada bulan ini.</p>' : 
+                            filteredLaporan.slice(-5).reverse().map(l => `
                                 <div class="py-3 flex items-center justify-between">
                                     <div>
                                         <p class="font-semibold text-sm text-slate-800">${l.uraian_kegiatan}</p>
-                                        <span class="text-xs text-slate-500">${l.tanggal} •${l.volume}</span>
+                                        <span class="text-xs text-slate-500">${l.tanggal} • ${l.volume}</span>
                                     </div>
                                     <span class="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">${l.status}</span>
                                 </div>
@@ -353,9 +439,17 @@
                     </div>
                 </div>
             `;
+
+            // Event listener untuk ubah bulan
+            div.querySelector('#filter-bulan').addEventListener('change', (e) => {
+                state.selectedMonth = e.target.value;
+                render();
+            });
+
             return div;
         }
 
+        // --- INPUT LAPORAN VIEW DENGAN FILTER RHK & RENCANA AKSI ---
         function renderInputView() {
             const div = document.createElement('div');
             div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
@@ -374,8 +468,26 @@
                             <input type="text" id="lap-volume" placeholder="Contoh: 1 Dokumen / 50 KPM" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
                         </div>
                     </div>
+
+                    <!-- Filter / Pilihan RHK -->
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Uraian Tugas / Output Kegiatan</label>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jenis Rencana Hasil Kerja (RHK)</label>
+                        <select id="lap-rhk" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm">
+                            <option value="">-- Pilih Rencana Hasil Kerja --</option>
+                            ${REF_RHK_AKSI.map((item, idx) => `<option value="${idx}">${item.rhk}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <!-- Filter / Pilihan Rencana Aksi -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Pilihan Laporan Harian (Rencana Aksi)</label>
+                        <select id="lap-aksi" required disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm">
+                            <option value="">-- Pilih RHK terlebih dahulu --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Uraian Tugas / Catatan Detail Kegiatan</label>
                         <textarea id="lap-uraian" rows="3" placeholder="Rincian kegiatan harian..." required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70"></textarea>
                     </div>
                     <div>
@@ -392,6 +504,28 @@
                 </form>
             `;
 
+            // Dinamis Update Dropdown Rencana Aksi saat RHK dipilih
+            const selectRhk = div.querySelector('#lap-rhk');
+            const selectAksi = div.querySelector('#lap-aksi');
+
+            selectRhk.addEventListener('change', (e) => {
+                const idx = e.target.value;
+                selectAksi.innerHTML = '<option value="">-- Pilih Rencana Aksi --</option>';
+                if (idx !== "") {
+                    selectAksi.disabled = false;
+                    selectAksi.className = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm focus:ring-2 focus:ring-red-500";
+                    REF_RHK_AKSI[idx].aksi.forEach(act => {
+                        const opt = document.createElement('option');
+                        opt.value = act;
+                        opt.textContent = act;
+                        selectAksi.appendChild(opt);
+                    });
+                } else {
+                    selectAksi.disabled = true;
+                    selectAksi.className = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm";
+                }
+            });
+
             div.querySelector('#laporan-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('btn-submit-lap');
@@ -401,6 +535,10 @@
                 const fotoInput = document.getElementById('lap-foto');
                 const files = fotoInput.files;
                 let fotoUrls = [];
+
+                const rhkIndex = selectRhk.value;
+                const rhkText = REF_RHK_AKSI[rhkIndex].rhk;
+                const aksiText = selectAksi.value;
 
                 const compressImage = (file) => {
                     return new Promise((resolve) => {
@@ -443,7 +581,7 @@
                     fotoUrls.push(compressed);
                 }
 
-                await saveLaporanToSupabase(JSON.stringify(fotoUrls));
+                await saveLaporanToSupabase(JSON.stringify(fotoUrls), rhkText, aksiText);
                 btn.disabled = false;
                 btn.innerText = 'Simpan Laporan Harian';
             });
@@ -451,7 +589,7 @@
             return div;
         }
 
-        async function saveLaporanToSupabase(fotoUrlsJson) {
+        async function saveLaporanToSupabase(fotoUrlsJson, rhkText, aksiText) {
             try {
                 if (!supabaseClient) {
                     showNotification('Supabase belum terhubung!', 'error');
@@ -461,6 +599,8 @@
                 const newLap = {
                     pegawai_id: state.user.id,
                     tanggal: document.getElementById('lap-tanggal').value,
+                    rhk: rhkText,
+                    rencana_aksi: aksiText,
                     uraian_kegiatan: document.getElementById('lap-uraian').value,
                     volume: document.getElementById('lap-volume').value,
                     lokasi: document.getElementById('lap-lokasi').value,
@@ -527,7 +667,9 @@
                                         <span class="text-xs font-semibold px-2.5 py-1 bg-red-50 text-red-600 rounded-lg">${l.tanggal}</span>
                                         <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">${l.status}</span>
                                     </div>
-                                    <p class="font-semibold text-slate-800 text-sm mb-1">${l.uraian_kegiatan}</p>
+                                    ${l.rhk ? `<p class="text-xs font-bold text-red-700 mb-1">RHK: ${l.rhk}</p>` : ''}
+                                    ${l.rencana_aksi ? `<p class="text-xs font-semibold text-slate-700 mb-1">Aksi: ${l.rencana_aksi}</p>` : ''}
+                                    <p class="font-medium text-slate-800 text-sm mb-1">${l.uraian_kegiatan}</p>
                                     <p class="text-xs text-slate-500 mb-3">📍 ${l.lokasi} • Volume: ${l.volume}</p>
                                 </div>
                                 <div>
