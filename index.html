@@ -109,7 +109,8 @@
         laporanList: [],
         notification: null,
         selectedMonthDashboard: new Date().toISOString().slice(0, 7),
-        selectedMonthRiwayat: new Date().toISOString().slice(0, 7)
+        selectedMonthRiwayat: new Date().toISOString().slice(0, 7),
+        selectedRhkRiwayat: '' // Filter RHK di Riwayat
     };
 
     function showNotification(message, type = 'success') {
@@ -294,8 +295,8 @@
             <div class="flex items-center gap-3 mb-8">
                 <div class="w-10 h-10 bg-red-600 text-white rounded-xl flex items-center justify-center font-bold">KS</div>
                 <div>
-                    <h2 class="font-bold text-sm leading-tight text-slate-900">PPKH Kec. Selo</h2>
-                    <span class="text-xs text-slate-500">Laporan Harian Pendamping Sosial</span>
+                    <h2 class="font-bold text-sm leading-tight text-slate-900">Kemensos RI</h2>
+                    <span class="text-xs text-slate-500">E-Laporan ASN</span>
                 </div>
             </div>
 
@@ -304,10 +305,10 @@
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                 </button>
                 <button onclick="state.view='input'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'input' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
-                    <i data-lucide="file-plus" class="w-5 h-5"></i> Input Laporan Harian
+                    <i data-lucide="file-plus" class="w-5 h-5"></i> Input Laporan
                 </button>
                 <button onclick="state.view='riwayat'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'riwayat' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
-                    <i data-lucide="history" class="w-5 h-5"></i> Riwayat & Unduh JPG
+                    <i data-lucide="history" class="w-5 h-5"></i> Riwayat & JPG
                 </button>
                 <button onclick="state.view='profil'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'profil' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
                     <i data-lucide="user" class="w-5 h-5"></i> Profil Pegawai
@@ -372,7 +373,7 @@
         return wrapper;
     }
 
-    // --- DASHBOARD VIEW DENGAN FILTER PER BULAN ---
+    // --- DASHBOARD VIEW (Dengan Filter Bulan) ---
     function renderDashboardView() {
         const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
         const filteredLaporan = userLaporan.filter(l => {
@@ -446,7 +447,7 @@
         return div;
     }
 
-    // --- INPUT LAPORAN VIEW DENGAN FILTER RHK & RENCANA AKSI ---
+    // --- INPUT LAPORAN VIEW (Dengan RHK & Aksi) ---
     function renderInputView() {
         const div = document.createElement('div');
         div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
@@ -632,6 +633,7 @@
         }
     }
 
+    // FUNGSI HAPUS LAPORAN INDIVIDU
     async function deleteLaporanItem(id) {
         if (!confirm('Apakah Anda yakin ingin menghapus laporan harian ini?')) return;
         try {
@@ -644,17 +646,22 @@
         }
     }
 
+    // FUNGSI HAPUS SEMUA LAPORAN PER BULAN (Berdasarkan Laporan yang tampil di Riwayat)
     async function deleteLaporanByMonth(monthStr) {
-        if (!confirm(`Apakah Anda yakin ingin menghapus SEMUA laporan pada bulan ${monthStr}? Tindakan ini tidak dapat dibatalkan.`)) return;
+        if (!confirm(`Apakah Anda yakin ingin menghapus SEMUA laporan yang tampil (Bulan ${monthStr})? Tindakan ini tidak dapat dibatalkan.`)) return;
         try {
+            // Cari data yang relevan dengan filter yang sedang aktif
             const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id && l.tanggal && l.tanggal.startsWith(monthStr));
+            
+            // Hapus satu persatu dari Supabase
             for (let l of userLaporan) {
                 await supabaseClient.from('laporan_harian').delete().eq('id', l.id);
             }
-            showNotification(`Semua laporan bulan ${monthStr} berhasil dihapus.`);
+            
+            showNotification(`Laporan bulan ${monthStr} berhasil dihapus.`);
             await fetchLaporanFromSupabase();
         } catch (err) {
-            showNotification('Gagal menghapus laporan bulanan.', 'error');
+            showNotification('Gagal menghapus laporan.', 'error');
         }
     }
 
@@ -670,51 +677,76 @@
         }
     }
 
-    // --- RIWAYAT VIEW DENGAN FILTER BULAN & HAPUS LAPORAN ---
+    // --- RIWAYAT VIEW DENGAN FILTER BULAN & FILTER RHK & TOMBOL HAPUS ---
     function renderRiwayatView() {
         const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
+        
+        // Proses Filter Bulan dan Filter RHK
         const filteredLaporan = userLaporan.filter(l => {
             if (!l.tanggal) return false;
-            return l.tanggal.startsWith(state.selectedMonthRiwayat);
+            // Filter Bulan
+            if (!l.tanggal.startsWith(state.selectedMonthRiwayat)) return false;
+            // Filter RHK (jika ada yang dipilih)
+            if (state.selectedRhkRiwayat && l.rhk !== state.selectedRhkRiwayat) return false;
+            
+            return true;
         });
 
         const div = document.createElement('div');
         div.className = 'space-y-4';
         div.innerHTML = `
-            <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                    <h3 class="font-bold text-slate-800 text-lg">Riwayat Laporan & Unduh Foto JPG</h3>
-                    <p class="text-xs text-slate-500">Filter berdasarkan bulan atau hapus catatan laporan.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <label class="text-xs font-semibold text-slate-600 uppercase">Pilih Bulan:</label>
-                    <input type="month" id="filter-bulan-riwayat" value="${state.selectedMonthRiwayat}" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-red-500">
+            <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col items-start justify-between gap-4">
+                <div class="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Riwayat Laporan & Unduh Foto JPG</h3>
+                        <p class="text-xs text-slate-500">Filter berdasarkan bulan atau RHK, dan hapus catatan laporan.</p>
+                    </div>
+                    
+                    <!-- Area Filter -->
+                    <div class="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full md:w-auto">
+                        <!-- Dropdown Filter RHK -->
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <label class="text-xs font-semibold text-slate-600 uppercase whitespace-nowrap">RHK:</label>
+                            <select id="filter-rhk-riwayat" class="w-full sm:w-48 px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-medium focus:ring-2 focus:ring-red-500">
+                                <option value="">Semua RHK</option>
+                                ${REF_RHK_AKSI.map(item => `<option value="${item.rhk}" ${state.selectedRhkRiwayat === item.rhk ? 'selected' : ''}>${item.rhk.substring(0, 45)}...</option>`).join('')}
+                            </select>
+                        </div>
+                        
+                        <!-- Input Filter Bulan -->
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <label class="text-xs font-semibold text-slate-600 uppercase whitespace-nowrap">Bulan:</label>
+                            <input type="month" id="filter-bulan-riwayat" value="${state.selectedMonthRiwayat}" class="w-full sm:w-auto px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-red-500">
+                        </div>
+                    </div>
                 </div>
             </div>
 
             ${filteredLaporan.length > 0 ? `
                 <div class="flex justify-end">
                     <button id="btn-hapus-bulan" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua Laporan Bulan ${state.selectedMonthRiwayat}
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua Laporan Tampil
                     </button>
                 </div>
             ` : ''}
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                ${filteredLaporan.length === 0 ? '<div class="col-span-2 text-center py-10 text-slate-400 text-sm">Belum ada riwayat laporan pada bulan ini.</div>' :
+                ${filteredLaporan.length === 0 ? '<div class="col-span-2 text-center py-10 text-slate-400 text-sm">Belum ada riwayat laporan yang sesuai dengan filter.</div>' :
                     filteredLaporan.map(l => {
                         let urls = parseFotoUrls(l.foto_urls);
                         return `
                         <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col justify-between relative group">
+                            <!-- Tombol Hapus Individu -->
                             <button onclick="deleteLaporanItem('${l.id}')" class="absolute top-4 right-4 text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition" title="Hapus Laporan Ini">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
+
                             <div>
                                 <div class="flex items-center justify-between mb-2 pr-8">
                                     <span class="text-xs font-semibold px-2.5 py-1 bg-red-50 text-red-600 rounded-lg">${l.tanggal}</span>
                                     <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">${l.status}</span>
                                 </div>
-                                ${l.rhk ? `<p class="text-xs font-bold text-red-700 mb-1">RHK: ${l.rhk}</p>` : ''}
+                                ${l.rhk ? `<p class="text-xs font-bold text-red-700 mb-1 line-clamp-2">RHK: ${l.rhk}</p>` : ''}
                                 ${l.rencana_aksi ? `<p class="text-xs font-semibold text-slate-700 mb-1">Aksi: ${l.rencana_aksi}</p>` : ''}
                                 <p class="font-medium text-slate-800 text-sm mb-1">${l.uraian_kegiatan}</p>
                                 <p class="text-xs text-slate-500 mb-3">📍 ${l.lokasi} • Volume: ${l.volume}</p>
@@ -738,11 +770,19 @@
             </div>
         `;
 
+        // Listener untuk Ubah Bulan
         div.querySelector('#filter-bulan-riwayat').addEventListener('change', (e) => {
             state.selectedMonthRiwayat = e.target.value;
             render();
         });
 
+        // Listener untuk Ubah Filter RHK
+        div.querySelector('#filter-rhk-riwayat').addEventListener('change', (e) => {
+            state.selectedRhkRiwayat = e.target.value;
+            render();
+        });
+
+        // Listener untuk Tombol Hapus Bulan
         const btnHapusBulan = div.querySelector('#btn-hapus-bulan');
         if (btnHapusBulan) {
             btnHapusBulan.addEventListener('click', () => {
