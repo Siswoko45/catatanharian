@@ -19,718 +19,776 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased selection:bg-red-500 selection:text-white">
 
-    <!-- KONFIGURASI SUPABASE -->
-    <script>
-        const SUPABASE_URL = "https://vzdlzjwsbqcayruvettr.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_9oTnQJTFNnzDxCC-c68Qiw_MCi_my_E";
-    </script>
+<!-- KONFIGURASI SUPABASE -->
+<script>
+    const SUPABASE_URL = "https://vzdlzjwsbqcayruvettr.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_9oTnQJTFNnzDxCC-c68Qiw_MCi_my_E";
+</script>
 
-    <div id="app" class="min-h-screen flex flex-col"></div>
+<div id="app" class="min-h-screen flex flex-col"></div>
 
-    <script>
-        let supabaseClient = null;
-        try {
-            if (window.supabase && SUPABASE_URL.includes("http")) {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        } catch (e) {
-            console.error("Gagal menginisialisasi Supabase", e);
+<script>
+    let supabaseClient = null;
+    try {
+        if (window.supabase && SUPABASE_URL.includes("http")) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
+    } catch (e) {
+        console.error("Gagal menginisialisasi Supabase", e);
+    }
 
-        // Data Referensi RHK & Rencana Aksi (Sesuai Permintaan)
-        const REF_RHK_AKSI = [
-            {
-                rhk: "Terlaksananya penyaluran bansos kepada Keluarga Penerima Manfaat (KPM) PKH tepat sasaran dan tepat jumlah",
-                aksi: [
-                    "Melakukan edukasi dan sosialisasi pencairan secara tunai dan non tunai",
-                    "Melaksanakan Supervisi Permasalahan Bantuan Sosial",
-                    "Melaksanakan Monitoring/Pemantauan Penyaluran Bantuan Sosial",
-                    "Melaksanakan Penelitian penyaluran bantuan Sosial"
-                ]
-            },
-            {
-                rhk: "Terlaksananya pertemuan P2K2 sesuai dengan ketentuan",
-                aksi: [
-                    "Melaksanakan Pertemuan Peningkatan Kemampuan Keluarga (P2K2)"
-                ]
-            },
-            {
-                rhk: "Terlaksananya Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial secara akurat sesuai dengan ketentuan",
-                aksi: [
-                    "Melaksanakan Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial",
-                    "Melakukan pendampingan, mediasi, dan fasilitasi kepada KPM PKH dalam proses perubahan perilaku, pola pikir yang mandiri dan produktif"
-                ]
-            },
-            {
-                rhk: "Tersedianya Data KPM graduasi yang disusun sesuai dengan instrumen dan ketentuan",
-                aksi: [
-                    "Melakukan usulan KPM Graduasi mandiri dan Pemberdayaan PPSE"
-                ]
-            },
-            {
-                rhk: "Terlaksananya Verifikasi, Validasi dan Pemutakhiran Data KPM secara akurat sesuai dengan ketentuan",
-                aksi: [
-                    "Melaksanakan Pemutakhiran Data",
-                    "Melaksanakan proses bisnis PKH yang meliputi verifikasi validasi calon penerima bantuan sosial"
-                ]
-            },
-            {
-                rhk: "Terlaksananya kegiatan kasus adaptif (Respon kasus/pengaduan/bencana/kerentanan) disusun secara lengkap dan akurat",
-                aksi: [
-                    "Melaksanakan Respon Kasus/Pengaduan/bencana/Kerentanan"
-                ]
-            },
-            {
-                rhk: "Tersedianya Data Analisis Laporan Bulanan yang disusun sesuai dengan Ketentuan",
-                aksi: [
-                    "Membuat laporan bulanan pelaksanaan PKH dan laporan lainnya."
-                ]
-            },
-            {
-                rhk: "Terlaksananya direktif pimpinan sesuai dengan penugasan; program Kementrian Sosial",
-                aksi: [
-                    "Melaksanakan Tindak Lanjut Hasil Pemeriksaan (TLHP)",
-                    "Melakukan sosialisasi kebijakan dan bisnis proses PKH kepada aparat pemerintah tingkat kecamatan, desa/kelurahan, KPM PKH, dan masyarakat umum secara berkala melalui Pertemuan atau media sosial dll",
-                    "Mengikuti Rapat Koordinasi, Sosialisasi Kebijakan Proses Bisnis PKH dan Penguatan Kapasitas SDM.",
-                    "Tugas Lainnya (Penugasan lainnya program Kementrian Sosial)"
-                ]
-            },
-            {
-                rhk: "Terlaksananya Penyebaran Berita Baik Kementrian Sosial",
-                aksi: [
-                    "Berperan aktif dalam memanfaatkan, menggunakan, melibatkan dan menyebarkan Media Sosial untuk menyampaikan semua program di Kementerian Sosial"
-                ]
-            }
-        ];
+    // Data Referensi RHK & Rencana Aksi
+    const REF_RHK_AKSI = [
+        {
+            rhk: "Terlaksananya penyaluran bansos kepada Keluarga Penerima Manfaat (KPM) PKH tepat sasaran dan tepat jumlah",
+            aksi: [
+                "Melakukan edukasi dan sosialisasi pencairan secara tunai dan non tunai",
+                "Melaksanakan Supervisi Permasalahan Bantuan Sosial",
+                "Melaksanakan Monitoring/Pemantauan Penyaluran Bantuan Sosial",
+                "Melaksanakan Penelitian penyaluran bantuan Sosial"
+            ]
+        },
+        {
+            rhk: "Terlaksananya pertemuan P2K2 sesuai dengan ketentuan",
+            aksi: [
+                "Melaksanakan Pertemuan Peningkatan Kemampuan Keluarga (P2K2)"
+            ]
+        },
+        {
+            rhk: "Terlaksananya Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial secara akurat sesuai dengan ketentuan",
+            aksi: [
+                "Melaksanakan Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial",
+                "Melakukan pendampingan, mediasi, dan fasilitasi kepada KPM PKH dalam proses perubahan perilaku, pola pikir yang mandiri dan produktif"
+            ]
+        },
+        {
+            rhk: "Tersedianya Data KPM graduasi yang disusun sesuai dengan instrumen dan ketentuan",
+            aksi: [
+                "Melakukan usulan KPM Graduasi mandiri dan Pemberdayaan PPSE"
+            ]
+        },
+        {
+            rhk: "Terlaksananya Verifikasi, Validasi dan Pemutakhiran Data KPM secara akurat sesuai dengan ketentuan",
+            aksi: [
+                "Melaksanakan Pemutakhiran Data",
+                "Melaksanakan proses bisnis PKH yang meliputi verifikasi validasi calon penerima bantuan sosial"
+            ]
+        },
+        {
+            rhk: "Terlaksananya kegiatan kasus adaptif (Respon kasus/pengaduan/bencana/kerentanan) disusun secara lengkap dan akurat",
+            aksi: [
+                "Melaksanakan Respon Kasus/Pengaduan/bencana/Kerentanan"
+            ]
+        },
+        {
+            rhk: "Tersedianya Data Analisis Laporan Bulanan yang disusun sesuai dengan Ketentuan",
+            aksi: [
+                "Membuat laporan bulanan pelaksanaan PKH dan laporan lainnya."
+            ]
+        },
+        {
+            rhk: "Terlaksananya direktif pimpinan sesuai dengan penugasan; program Kementrian Sosial",
+            aksi: [
+                "Melaksanakan Tindak Lanjut Hasil Pemeriksaan (TLHP)",
+                "Melakukan sosialisasi kebijakan dan bisnis proses PKH kepada aparat pemerintah tingkat kecamatan, desa/kelurahan, KPM PKH, dan masyarakat umum secara berkala melalui Pertemuan atau media sosial dll",
+                "Mengikuti Rapat Koordinasi, Sosialisasi Kebijakan Proses Bisnis PKH dan Penguatan Kapasitas SDM.",
+                "Tugas Lainnya (Penugasan lainnya program Kementrian Sosial)"
+            ]
+        },
+        {
+            rhk: "Terlaksananya Penyebaran Berita Baik Kementrian Sosial",
+            aksi: [
+                "Berperan aktif dalam memanfaatkan, menggunakan, melibatkan dan menyebarkan Media Sosial untuk menyampaikan semua program di Kementerian Sosial"
+            ]
+        }
+    ];
 
-        let state = {
-            view: 'login', 
-            user: null,
-            laporanList: [],
-            notification: null,
-            selectedMonth: new Date().toISOString().slice(0, 7) // Default bulan berjalan (YYYY-MM)
-        };
+    let state = {
+        view: 'login', 
+        user: null,
+        laporanList: [],
+        notification: null,
+        selectedMonthDashboard: new Date().toISOString().slice(0, 7),
+        selectedMonthRiwayat: new Date().toISOString().slice(0, 7)
+    };
 
-        function showNotification(message, type = 'success') {
-            state.notification = { message, type };
+    function showNotification(message, type = 'success') {
+        state.notification = { message, type };
+        render();
+        setTimeout(() => {
+            state.notification = null;
             render();
-            setTimeout(() => {
-                state.notification = null;
-                render();
-            }, 3500);
+        }, 3500);
+    }
+
+    function render() {
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+
+        if (state.notification) {
+            const notifEl = document.createElement('div');
+            notifEl.className = `fixed top-5 right-5 z-50 px-5 py-3 rounded-xl shadow-lg text-white font-medium flex items-center gap-3 transition-all transform translate-y-0 ${state.notification.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
+            notifEl.innerHTML = `<i data-lucide="${state.notification.type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-5 h-5"></i><span>${state.notification.message}</span>`;
+            app.appendChild(notifEl);
         }
 
-        function render() {
-            const app = document.getElementById('app');
-            app.innerHTML = '';
-
-            if (state.notification) {
-                const notifEl = document.createElement('div');
-                notifEl.className = `fixed top-5 right-5 z-50 px-5 py-3 rounded-xl shadow-lg text-white font-medium flex items-center gap-3 transition-all transform translate-y-0 ${state.notification.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
-                notifEl.innerHTML = `<i data-lucide="${state.notification.type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-5 h-5"></i><span>${state.notification.message}</span>`;
-                app.appendChild(notifEl);
-            }
-
-            if (!state.user) {
-                if (state.view === 'register') {
-                    app.appendChild(renderRegister());
-                } else {
-                    app.appendChild(renderLogin());
-                }
+        if (!state.user) {
+            if (state.view === 'register') {
+                app.appendChild(renderRegister());
             } else {
-                app.appendChild(renderMainLayout());
+                app.appendChild(renderLogin());
             }
-
-            lucide.createIcons();
+        } else {
+            app.appendChild(renderMainLayout());
         }
 
-        function renderLogin() {
-            const container = document.createElement('div');
-            container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
-            
-            container.innerHTML = `
-                <div class="max-w-md w-full glass p-8 rounded-3xl shadow-xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
-                    <div class="text-center mb-8">
-                        <div class="w-16 h-16 bg-red-600 text-white rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-red-600/30 mb-4">
-                            <i data-lucide="shield-check" class="w-8 h-8"></i>
-                        </div>
-                        <h1 class="text-2xl font-bold text-slate-900">Kementerian Sosial RI</h1>
-                        <p class="text-sm text-slate-500 mt-1">Catatan Laporan Harian ASN / PPPK</p>
-                    </div>
+        lucide.createIcons();
+    }
 
-                    <form id="login-form" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nomor Induk Pegawai (NIP)</label>
-                            <input type="text" id="login-nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Masukkan NIP...">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kata Sandi (Password)</label>
-                            <input type="password" id="login-password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="••••••••">
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2">
-                            <i data-lucide="log-in" class="w-5 h-5"></i> Masuk Aplikasi
-                        </button>
-                    </form>
-
-                    <div class="mt-6 text-center text-sm text-slate-600">
-                        Belum punya akun pegawai? <button onclick="state.view='register'; render();" class="text-red-600 font-semibold hover:underline">Daftar di sini</button>
+    function renderLogin() {
+        const container = document.createElement('div');
+        container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
+        
+        container.innerHTML = `
+            <div class="max-w-md w-full glass p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-red-600 text-white rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-red-600/30 mb-4">
+                        <i data-lucide="shield-check" class="w-8 h-8"></i>
                     </div>
+                    <h1 class="text-2xl font-bold text-slate-900">Kementerian Sosial RI</h1>
+                    <p class="text-sm text-slate-500 mt-1">Catatan Laporan Harian ASN / PPPK</p>
                 </div>
-            `;
 
-            container.querySelector('#login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!supabaseClient) {
-                    showNotification('Supabase belum dikonfigurasi!', 'error');
-                    return;
-                }
-
-                const nip = document.getElementById('login-nip').value.trim();
-                const password = document.getElementById('login-password').value;
-
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('pegawai')
-                        .select('*')
-                        .eq('nip', nip)
-                        .eq('password', password)
-                        .single();
-
-                    if (error || !data) throw new Error('NIP atau Password salah.');
-
-                    state.user = data;
-                    state.view = 'dashboard';
-                    showNotification('Berhasil masuk sebagai ' + data.nama);
-                    await fetchLaporanFromSupabase();
-                } catch (err) {
-                    showNotification('NIP atau Password salah!', 'error');
-                }
-            });
-
-            return container;
-        }
-
-        function renderRegister() {
-            const container = document.createElement('div');
-            container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
-            
-            container.innerHTML = `
-                <div class="max-w-md w-full glass p-8 rounded-3xl shadow-xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
-                    <div class="text-center mb-6">
-                        <h1 class="text-2xl font-bold text-slate-900">Registrasi Pegawai</h1>
-                        <p class="text-sm text-slate-500 mt-1">Pendaftaran Akun ASN / PPPK Kemensos</p>
-                    </div>
-
-                    <form id="register-form" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">NIP / Nomor PPPK</label>
-                            <input type="text" id="reg-nip" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Contoh: 1990...">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nama Lengkap & Gelar</label>
-                            <input type="text" id="reg-nama" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Nama lengkap...">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jabatan</label>
-                            <input type="text" id="reg-jabatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Jabatan...">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unit Kerja / Direktorat</label>
-                            <input type="text" id="reg-unit" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Unit kerja...">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kata Sandi (Password)</label>
-                            <input type="password" id="reg-password" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="••••••••">
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition mt-2">
-                            Daftarkan Akun
-                        </button>
-                    </form>
-
-                    <div class="mt-4 text-center text-sm text-slate-600">
-                        Sudah punya akun? <button onclick="state.view='login'; render();" class="text-red-600 font-semibold hover:underline">Masuk di sini</button>
-                    </div>
-                </div>
-            `;
-
-            container.querySelector('#register-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!supabaseClient) return;
-
-                const nip = document.getElementById('reg-nip').value.trim();
-                const nama = document.getElementById('reg-nama').value.trim();
-                const jabatan = document.getElementById('reg-jabatan').value.trim();
-                const unit_kerja = document.getElementById('reg-unit').value.trim();
-                const password = document.getElementById('reg-password').value;
-
-                try {
-                    const { error } = await supabaseClient
-                        .from('pegawai')
-                        .insert([{ nip, nama, jabatan, unit_kerja, password }]);
-
-                    if (error) throw error;
-
-                    showNotification('Registrasi berhasil! Silakan masuk.');
-                    state.view = 'login';
-                    render();
-                } catch (err) {
-                    showNotification('Gagal registrasi (NIP sudah terdaftar).', 'error');
-                }
-            });
-
-            return container;
-        }
-
-        function renderMainLayout() {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'min-h-screen flex flex-col md:flex-row bg-slate-50';
-
-            const sidebar = document.createElement('aside');
-            sidebar.className = 'hidden md:flex flex-col w-64 glass border-r border-slate-200 p-6 shrink-0 fixed inset-y-0 z-20';
-            sidebar.innerHTML = `
-                <div class="flex items-center gap-3 mb-8">
-                    <div class="w-10 h-10 bg-red-600 text-white rounded-xl flex items-center justify-center font-bold">KS</div>
+                <form id="login-form" class="space-y-4">
                     <div>
-                        <h2 class="font-bold text-sm leading-tight text-slate-900">PPKH Kec. Selo</h2>
-                        <span class="text-xs text-slate-500">Laporan ASN Selo</span>
-                    </div>
-                </div>
-
-                <nav class="space-y-1.5 flex-1">
-                    <button onclick="state.view='dashboard'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'dashboard' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
-                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                    </button>
-                    <button onclick="state.view='input'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'input' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
-                        <i data-lucide="file-plus" class="w-5 h-5"></i> Input Laporan Harian
-                    </button>
-                    <button onclick="state.view='riwayat'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'riwayat' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
-                        <i data-lucide="history" class="w-5 h-5"></i> Riwayat & Unduh JPG
-                    </button>
-                    <button onclick="state.view='profil'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'profil' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
-                        <i data-lucide="user" class="w-5 h-5"></i> Profil Pegawai
-                    </button>
-                </nav>
-
-                <div class="pt-4 border-t border-slate-200">
-                    <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-red-600 hover:bg-red-50 transition">
-                        <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
-                    </button>
-                </div>
-            `;
-            wrapper.appendChild(sidebar);
-
-            const bottomNav = document.createElement('nav');
-            bottomNav.className = 'md:hidden fixed bottom-0 left-0 right-0 glass border-t border-slate-200 p-2 flex justify-around z-30 shadow-lg';
-            bottomNav.innerHTML = `
-                <button onclick="state.view='dashboard'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'dashboard' ? 'text-red-600' : 'text-slate-500'}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Home</span>
-                </button>
-                <button onclick="state.view='input'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'input' ? 'text-red-600' : 'text-slate-500'}">
-                    <i data-lucide="file-plus" class="w-5 h-5"></i><span>Input</span>
-                </button>
-                <button onclick="state.view='riwayat'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'riwayat' ? 'text-red-600' : 'text-slate-500'}">
-                    <i data-lucide="history" class="w-5 h-5"></i><span>Riwayat</span>
-                </button>
-                <button onclick="state.view='profil'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'profil' ? 'text-red-600' : 'text-slate-500'}">
-                    <i data-lucide="user" class="w-5 h-5"></i><span>Profil</span>
-                </button>
-            `;
-            wrapper.appendChild(bottomNav);
-
-            const main = document.createElement('main');
-            main.className = 'flex-1 md:ml-64 p-4 md:p-8 pb-24 md:pb-8 max-w-5xl mx-auto w-full';
-
-            const headerBar = document.createElement('header');
-            headerBar.className = 'flex items-center justify-between glass-card p-4 rounded-2xl mb-6 shadow-sm';
-            headerBar.innerHTML = `
-                <div>
-                    <h1 class="font-bold text-slate-800 text-lg">Selamat Datang, ${state.user.nama}</h1>
-                    <p class="text-xs text-slate-500">${state.user.jabatan} - ${state.user.unit_kerja}</p>
-                </div>
-                <button onclick="logout()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-semibold transition">
-                    <i data-lucide="log-out" class="w-4 h-4"></i><span>Keluar</span>
-                </button>
-            `;
-            main.appendChild(headerBar);
-
-            const viewContainer = document.createElement('div');
-            if (state.view === 'dashboard') {
-                viewContainer.appendChild(renderDashboardView());
-            } else if (state.view === 'input') {
-                viewContainer.appendChild(renderInputView());
-            } else if (state.view === 'riwayat') {
-                viewContainer.appendChild(renderRiwayatView());
-            } else if (state.view === 'profil') {
-                viewContainer.appendChild(renderProfilView());
-            }
-            main.appendChild(viewContainer);
-
-            wrapper.appendChild(main);
-            return wrapper;
-        }
-
-        // --- DASHBOARD VIEW DENGAN FILTER PER BULAN ---
-        function renderDashboardView() {
-            const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
-            
-            // Filter laporan berdasarkan bulan yang dipilih (Format tanggal di DB: YYYY-MM-DD)
-            const filteredLaporan = userLaporan.filter(l => {
-                if (!l.tanggal) return false;
-                return l.tanggal.startsWith(state.selectedMonth);
-            });
-
-            const totalKegiatan = filteredLaporan.length;
-            const disetujui = filteredLaporan.filter(l => l.status === 'Disetujui').length;
-            const totalFoto = filteredLaporan.reduce((acc, l) => {
-                let urls = parseFotoUrls(l.foto_urls);
-                return acc + urls.length;
-            }, 0);
-
-            const div = document.createElement('div');
-            div.className = 'space-y-6';
-            div.innerHTML = `
-                <!-- Filter Bulan -->
-                <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div>
-                        <h3 class="font-bold text-slate-800">Ringkasan Kinerja Bulanan</h3>
-                        <p class="text-xs text-slate-500">Pilih bulan untuk melihat rekapitulasi laporan harian.</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs font-semibold text-slate-600 uppercase">Pilih Bulan:</label>
-                        <input type="month" id="filter-bulan" value="${state.selectedMonth}" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-red-500">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-red-600">
-                        <span class="text-xs text-slate-500 font-semibold uppercase">Total Laporan Bulan Ini</span>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-1">${totalKegiatan} Catatan</h3>
-                    </div>
-                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-500">
-                        <span class="text-xs text-slate-500 font-semibold uppercase">Status Disetujui</span>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-1">${disetujui} Laporan</h3>
-                    </div>
-                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
-                        <span class="text-xs text-slate-500 font-semibold uppercase">Total Foto Dokumentasi</span>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-1">${totalFoto} Foto</h3>
-                    </div>
-                </div>
-
-                <div class="glass-card p-6 rounded-2xl shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-slate-800">Aktivitas Laporan Bulan ${state.selectedMonth}</h3>
-                        <button onclick="state.view='input'; render();" class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold shadow-md hover:bg-red-700 transition">
-                            + Buat Laporan Baru
-                        </button>
-                    </div>
-                    <div class="divide-y divide-slate-100">
-                        ${filteredLaporan.length === 0 ? '<p class="text-sm text-slate-500 py-4 text-center">Belum ada laporan harian pada bulan ini.</p>' : 
-                            filteredLaporan.slice(-5).reverse().map(l => `
-                                <div class="py-3 flex items-center justify-between">
-                                    <div>
-                                        <p class="font-semibold text-sm text-slate-800">${l.uraian_kegiatan}</p>
-                                        <span class="text-xs text-slate-500">${l.tanggal} • ${l.volume}</span>
-                                    </div>
-                                    <span class="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">${l.status}</span>
-                                </div>
-                            `).join('')}
-                    </div>
-                </div>
-            `;
-
-            // Event listener untuk ubah bulan
-            div.querySelector('#filter-bulan').addEventListener('change', (e) => {
-                state.selectedMonth = e.target.value;
-                render();
-            });
-
-            return div;
-        }
-
-        // --- INPUT LAPORAN VIEW DENGAN FILTER RHK & RENCANA AKSI ---
-        function renderInputView() {
-            const div = document.createElement('div');
-            div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
-            div.innerHTML = `
-                <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
-                    <i data-lucide="file-plus" class="w-5 h-5 text-red-600"></i> Form Catatan Laporan Harian
-                </h3>
-                <form id="laporan-form" class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tanggal Kegiatan</label>
-                            <input type="date" id="lap-tanggal" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Volume / Satuan Hasil</label>
-                            <input type="text" id="lap-volume" placeholder="Contoh: 1 Dokumen / 50 KPM" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
-                        </div>
-                    </div>
-
-                    <!-- Filter / Pilihan RHK -->
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jenis Rencana Hasil Kerja (RHK)</label>
-                        <select id="lap-rhk" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm">
-                            <option value="">-- Pilih Rencana Hasil Kerja --</option>
-                            ${REF_RHK_AKSI.map((item, idx) => `<option value="${idx}">${item.rhk}</option>`).join('')}
-                        </select>
-                    </div>
-
-                    <!-- Filter / Pilihan Rencana Aksi -->
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Pilihan Laporan Harian (Rencana Aksi)</label>
-                        <select id="lap-aksi" required disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm">
-                            <option value="">-- Pilih RHK terlebih dahulu --</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Uraian Tugas / Catatan Detail Kegiatan</label>
-                        <textarea id="lap-uraian" rows="3" placeholder="Rincian kegiatan harian..." required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70"></textarea>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nomor Induk Pegawai (NIP)</label>
+                        <input type="text" id="login-nip" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Masukkan NIP...">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Lokasi Kegiatan</label>
-                        <input type="text" id="lap-lokasi" placeholder="Nama instansi / alamat / lokasi kegiatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kata Sandi (Password)</label>
+                        <input type="password" id="login-password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="••••••••">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unggah Foto Dokumentasi (Bisa Pilih Banyak)</label>
-                        <input type="file" id="lap-foto" accept="image/*" multiple class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
-                    </div>
-                    <button type="submit" id="btn-submit-lap" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition">
-                        Simpan Laporan Harian
+                    <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2">
+                        <i data-lucide="log-in" class="w-5 h-5"></i> Masuk Aplikasi
                     </button>
                 </form>
-            `;
 
-            // Dinamis Update Dropdown Rencana Aksi saat RHK dipilih
-            const selectRhk = div.querySelector('#lap-rhk');
-            const selectAksi = div.querySelector('#lap-aksi');
+                <div class="mt-6 text-center text-sm text-slate-600">
+                    Belum punya akun pegawai? <button onclick="state.view='register'; render();" class="text-red-600 font-semibold hover:underline">Daftar di sini</button>
+                </div>
+            </div>
+        `;
 
-            selectRhk.addEventListener('change', (e) => {
-                const idx = e.target.value;
-                selectAksi.innerHTML = '<option value="">-- Pilih Rencana Aksi --</option>';
-                if (idx !== "") {
-                    selectAksi.disabled = false;
-                    selectAksi.className = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm focus:ring-2 focus:ring-red-500";
-                    REF_RHK_AKSI[idx].aksi.forEach(act => {
-                        const opt = document.createElement('option');
-                        opt.value = act;
-                        opt.textContent = act;
-                        selectAksi.appendChild(opt);
-                    });
-                } else {
-                    selectAksi.disabled = true;
-                    selectAksi.className = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm";
-                }
-            });
-
-            div.querySelector('#laporan-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const btn = document.getElementById('btn-submit-lap');
-                btn.disabled = true;
-                btn.innerText = 'Menyimpan...';
-
-                const fotoInput = document.getElementById('lap-foto');
-                const files = fotoInput.files;
-                let fotoUrls = [];
-
-                const rhkIndex = selectRhk.value;
-                const rhkText = REF_RHK_AKSI[rhkIndex].rhk;
-                const aksiText = selectAksi.value;
-
-                const compressImage = (file) => {
-                    return new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            const img = new Image();
-                            img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                const MAX_WIDTH = 600;
-                                const MAX_HEIGHT = 600;
-                                let width = img.width;
-                                let height = img.height;
-
-                                if (width > height) {
-                                    if (width > MAX_WIDTH) {
-                                        height *= MAX_WIDTH / width;
-                                        width = MAX_WIDTH;
-                                    }
-                                } else {
-                                    if (height > MAX_HEIGHT) {
-                                        width *= MAX_HEIGHT / height;
-                                        height = MAX_HEIGHT;
-                                    }
-                                }
-
-                                canvas.width = width;
-                                canvas.height = height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0, width, height);
-                                resolve(canvas.toDataURL('image/jpeg', 0.6));
-                            };
-                            img.src = event.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                };
-
-                for (let i = 0; i < files.length; i++) {
-                    const compressed = await compressImage(files[i]);
-                    fotoUrls.push(compressed);
-                }
-
-                await saveLaporanToSupabase(JSON.stringify(fotoUrls), rhkText, aksiText);
-                btn.disabled = false;
-                btn.innerText = 'Simpan Laporan Harian';
-            });
-
-            return div;
-        }
-
-        async function saveLaporanToSupabase(fotoUrlsJson, rhkText, aksiText) {
-            try {
-                if (!supabaseClient) {
-                    showNotification('Supabase belum terhubung!', 'error');
-                    return;
-                }
-
-                const newLap = {
-                    pegawai_id: state.user.id,
-                    tanggal: document.getElementById('lap-tanggal').value,
-                    rhk: rhkText,
-                    rencana_aksi: aksiText,
-                    uraian_kegiatan: document.getElementById('lap-uraian').value,
-                    volume: document.getElementById('lap-volume').value,
-                    lokasi: document.getElementById('lap-lokasi').value,
-                    foto_urls: fotoUrlsJson,
-                    status: 'Pending'
-                };
-
-                const { error } = await supabaseClient.from('laporan_harian').insert([newLap]);
-                if (error) throw error;
-
-                showNotification('Laporan harian berhasil disimpan!');
-                await fetchLaporanFromSupabase();
-                state.view = 'riwayat';
-                render();
-            } catch (err) {
-                console.error(err);
-                showNotification('Gagal menyimpan laporan ke database.', 'error');
+        container.querySelector('#login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!supabaseClient) {
+                showNotification('Supabase belum dikonfigurasi!', 'error');
+                return;
             }
-        }
 
-        async function fetchLaporanFromSupabase() {
-            if (!supabaseClient || !state.user) return;
+            const nip = document.getElementById('login-nip').value.trim();
+            const password = document.getElementById('login-password').value;
+
             try {
                 const { data, error } = await supabaseClient
-                    .from('laporan_harian')
+                    .from('pegawai')
                     .select('*')
-                    .eq('pegawai_id', state.user.id);
-                
-                if (!error && data) {
-                    state.laporanList = data;
-                }
+                    .eq('nip', nip)
+                    .eq('password', password)
+                    .single();
+
+                if (error || !data) throw new Error('NIP atau Password salah.');
+
+                state.user = data;
+                state.view = 'dashboard';
+                showNotification('Berhasil masuk sebagai ' + data.nama);
+                await fetchLaporanFromSupabase();
             } catch (err) {
-                console.error("Gagal mengambil data laporan", err);
+                showNotification('NIP atau Password salah!', 'error');
             }
-        }
+        });
 
-        function parseFotoUrls(foto_urls) {
-            if (!foto_urls) return [];
-            try {
-                if (typeof foto_urls === 'string' && foto_urls.startsWith('[')) {
-                    return JSON.parse(foto_urls);
-                }
-                return [foto_urls];
-            } catch (e) {
-                return [foto_urls];
-            }
-        }
+        return container;
+    }
 
-        function renderRiwayatView() {
-            const div = document.createElement('div');
-            div.className = 'space-y-4';
-            div.innerHTML = `
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-slate-800 text-lg">Riwayat Laporan & Unduh Foto JPG</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    ${state.laporanList.length === 0 ? '<p class="text-sm text-slate-500">Belum ada riwayat laporan.</p>' :
-                        state.laporanList.map(l => {
-                            let urls = parseFotoUrls(l.foto_urls);
-                            return `
-                            <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-xs font-semibold px-2.5 py-1 bg-red-50 text-red-600 rounded-lg">${l.tanggal}</span>
-                                        <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">${l.status}</span>
-                                    </div>
-                                    ${l.rhk ? `<p class="text-xs font-bold text-red-700 mb-1">RHK: ${l.rhk}</p>` : ''}
-                                    ${l.rencana_aksi ? `<p class="text-xs font-semibold text-slate-700 mb-1">Aksi: ${l.rencana_aksi}</p>` : ''}
-                                    <p class="font-medium text-slate-800 text-sm mb-1">${l.uraian_kegiatan}</p>
-                                    <p class="text-xs text-slate-500 mb-3">📍 ${l.lokasi} • Volume: ${l.volume}</p>
-                                </div>
-                                <div>
-                                    ${urls.length > 0 ? `
-                                        <div class="grid grid-cols-2 gap-2 mb-3">
-                                            ${urls.map((url, idx) => `
-                                                <div class="relative group">
-                                                    <img src="${url}" class="w-full h-28 object-cover rounded-xl border border-slate-100">
-                                                    <a href="${url}" download="Dokumentasi_${l.tanggal}_${idx + 1}.jpg" class="absolute bottom-1 right-1 bg-slate-900/80 hover:bg-slate-900 text-white p-1.5 rounded-lg text-xs flex items-center gap-1 backdrop-blur-sm transition">
-                                                        <i data-lucide="download" class="w-3.5 h-3.5"></i> JPG ${idx + 1}
-                                                    </a>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : '<p class="text-xs text-slate-400 italic mb-3">Tidak ada foto dokumentasi</p>'}
-                                </div>
-                            </div>
-                        `;}).join('')}
-                </div>
-            `;
-            return div;
-        }
-
-        function renderProfilView() {
-            const div = document.createElement('div');
-            div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-xl mx-auto';
-            div.innerHTML = `
+    function renderRegister() {
+        const container = document.createElement('div');
+        container.className = 'min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-slate-50 to-red-100';
+        
+        container.innerHTML = `
+            <div class="max-w-md w-full glass p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 to-amber-500"></div>
                 <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full mx-auto flex items-center justify-center text-2xl font-bold mb-3">
-                        ${state.user.nama.charAt(0)}
-                    </div>
-                    <h3 class="font-bold text-slate-900 text-lg">${state.user.nama}</h3>
-                    <p class="text-xs text-slate-500">NIP: ${state.user.nip}</p>
+                    <h1 class="text-2xl font-bold text-slate-900">Registrasi Pegawai</h1>
+                    <p class="text-sm text-slate-500 mt-1">Pendaftaran Akun ASN / PPPK Kemensos</p>
                 </div>
-                <div class="space-y-3 text-sm border-t border-slate-100 pt-4">
-                    <div class="flex justify-between py-2 border-b border-slate-50">
-                        <span class="text-slate-500">Jabatan</span>
-                        <span class="font-semibold text-slate-800">${state.user.jabatan}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-slate-50">
-                        <span class="text-slate-500">Unit Kerja</span>
-                        <span class="font-semibold text-slate-800">${state.user.unit_kerja}</span>
-                    </div>
-                    <div class="flex justify-between py-2">
-                        <span class="text-slate-500">Instansi</span>
-                        <span class="font-semibold text-slate-800">Kementerian Sosial RI</span>
-                    </div>
-                </div>
-            `;
-            return div;
-        }
 
-        function logout() {
-            state.user = null;
-            state.laporanList = [];
-            state.view = 'login';
-            showNotification('Berhasil keluar akun.');
+                <form id="register-form" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">NIP / Nomor PPPK</label>
+                        <input type="text" id="reg-nip" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Contoh: 1990...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nama Lengkap & Gelar</label>
+                        <input type="text" id="reg-nama" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Nama lengkap...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jabatan</label>
+                        <input type="text" id="reg-jabatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Jabatan...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unit Kerja / Direktorat</label>
+                        <input type="text" id="reg-unit" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="Unit kerja...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Kata Sandi (Password)</label>
+                        <input type="password" id="reg-password" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 bg-white/70" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition mt-2">
+                        Daftarkan Akun
+                    </button>
+                </form>
+
+                <div class="mt-4 text-center text-sm text-slate-600">
+                    Sudah punya akun? <button onclick="state.view='login'; render();" class="text-red-600 font-semibold hover:underline">Masuk di sini</button>
+                </div>
+            </div>
+        `;
+
+        container.querySelector('#register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!supabaseClient) return;
+
+            const nip = document.getElementById('reg-nip').value.trim();
+            const nama = document.getElementById('reg-nama').value.trim();
+            const jabatan = document.getElementById('reg-jabatan').value.trim();
+            const unit_kerja = document.getElementById('reg-unit').value.trim();
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('pegawai')
+                    .insert([{ nip, nama, jabatan, unit_kerja, password }]);
+
+                if (error) throw error;
+
+                showNotification('Registrasi berhasil! Silakan masuk.');
+                state.view = 'login';
+                render();
+            } catch (err) {
+                showNotification('Gagal registrasi (NIP sudah terdaftar).', 'error');
+            }
+        });
+
+        return container;
+    }
+
+    function renderMainLayout() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'min-h-screen flex flex-col md:flex-row bg-slate-50';
+
+        const sidebar = document.createElement('aside');
+        sidebar.className = 'hidden md:flex flex-col w-64 glass border-r border-slate-200 p-6 shrink-0 fixed inset-y-0 z-20';
+        sidebar.innerHTML = `
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 bg-red-600 text-white rounded-xl flex items-center justify-center font-bold">KS</div>
+                <div>
+                    <h2 class="font-bold text-sm leading-tight text-slate-900">Kemensos RI</h2>
+                    <span class="text-xs text-slate-500">E-Laporan ASN</span>
+                </div>
+            </div>
+
+            <nav class="space-y-1.5 flex-1">
+                <button onclick="state.view='dashboard'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'dashboard' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                </button>
+                <button onclick="state.view='input'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'input' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                    <i data-lucide="file-plus" class="w-5 h-5"></i> Input Laporan Harian
+                </button>
+                <button onclick="state.view='riwayat'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'riwayat' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                    <i data-lucide="history" class="w-5 h-5"></i> Riwayat & Unduh JPG
+                </button>
+                <button onclick="state.view='profil'; render();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition ${state.view === 'profil' ? 'bg-red-600 text-white shadow-md shadow-red-600/20' : 'text-slate-600 hover:bg-slate-100'}">
+                    <i data-lucide="user" class="w-5 h-5"></i> Profil Pegawai
+                </button>
+            </nav>
+
+            <div class="pt-4 border-t border-slate-200">
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-red-600 hover:bg-red-50 transition">
+                    <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
+                </button>
+            </div>
+        `;
+        wrapper.appendChild(sidebar);
+
+        const bottomNav = document.createElement('nav');
+        bottomNav.className = 'md:hidden fixed bottom-0 left-0 right-0 glass border-t border-slate-200 p-2 flex justify-around z-30 shadow-lg';
+        bottomNav.innerHTML = `
+            <button onclick="state.view='dashboard'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'dashboard' ? 'text-red-600' : 'text-slate-500'}">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Home</span>
+            </button>
+            <button onclick="state.view='input'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'input' ? 'text-red-600' : 'text-slate-500'}">
+                <i data-lucide="file-plus" class="w-5 h-5"></i><span>Input</span>
+            </button>
+            <button onclick="state.view='riwayat'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'riwayat' ? 'text-red-600' : 'text-slate-500'}">
+                <i data-lucide="history" class="w-5 h-5"></i><span>Riwayat</span>
+            </button>
+            <button onclick="state.view='profil'; render();" class="flex flex-col items-center p-2 text-xs font-medium ${state.view === 'profil' ? 'text-red-600' : 'text-slate-500'}">
+                <i data-lucide="user" class="w-5 h-5"></i><span>Profil</span>
+            </button>
+        `;
+        wrapper.appendChild(bottomNav);
+
+        const main = document.createElement('main');
+        main.className = 'flex-1 md:ml-64 p-4 md:p-8 pb-24 md:pb-8 max-w-5xl mx-auto w-full';
+
+        const headerBar = document.createElement('header');
+        headerBar.className = 'flex items-center justify-between glass-card p-4 rounded-2xl mb-6 shadow-sm';
+        headerBar.innerHTML = `
+            <div>
+                <h1 class="font-bold text-slate-800 text-lg">Selamat Datang, ${state.user.nama}</h1>
+                <p class="text-xs text-slate-500">${state.user.jabatan} - ${state.user.unit_kerja}</p>
+            </div>
+            <button onclick="logout()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-semibold transition">
+                <i data-lucide="log-out" class="w-4 h-4"></i><span>Keluar</span>
+            </button>
+        `;
+        main.appendChild(headerBar);
+
+        const viewContainer = document.createElement('div');
+        if (state.view === 'dashboard') {
+            viewContainer.appendChild(renderDashboardView());
+        } else if (state.view === 'input') {
+            viewContainer.appendChild(renderInputView());
+        } else if (state.view === 'riwayat') {
+            viewContainer.appendChild(renderRiwayatView());
+        } else if (state.view === 'profil') {
+            viewContainer.appendChild(renderProfilView());
+        }
+        main.appendChild(viewContainer);
+
+        wrapper.appendChild(main);
+        return wrapper;
+    }
+
+    // --- DASHBOARD VIEW DENGAN FILTER PER BULAN ---
+    function renderDashboardView() {
+        const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
+        const filteredLaporan = userLaporan.filter(l => {
+            if (!l.tanggal) return false;
+            return l.tanggal.startsWith(state.selectedMonthDashboard);
+        });
+
+        const totalKegiatan = filteredLaporan.length;
+        const disetujui = filteredLaporan.filter(l => l.status === 'Disetujui').length;
+        const totalFoto = filteredLaporan.reduce((acc, l) => {
+            let urls = parseFotoUrls(l.foto_urls);
+            return acc + urls.length;
+        }, 0);
+
+        const div = document.createElement('div');
+        div.className = 'space-y-6';
+        div.innerHTML = `
+            <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-slate-800">Ringkasan Kinerja Bulanan</h3>
+                    <p class="text-xs text-slate-500">Pilih bulan untuk melihat rekapitulasi laporan harian.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-slate-600 uppercase">Pilih Bulan:</label>
+                    <input type="month" id="filter-bulan-dash" value="${state.selectedMonthDashboard}" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-red-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-red-600">
+                    <span class="text-xs text-slate-500 font-semibold uppercase">Total Laporan Bulan Ini</span>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1">${totalKegiatan} Catatan</h3>
+                </div>
+                <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-500">
+                    <span class="text-xs text-slate-500 font-semibold uppercase">Status Disetujui</span>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1">${disetujui} Laporan</h3>
+                </div>
+                <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
+                    <span class="text-xs text-slate-500 font-semibold uppercase">Total Foto Dokumentasi</span>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1">${totalFoto} Foto</h3>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-800">Aktivitas Laporan Bulan ${state.selectedMonthDashboard}</h3>
+                    <button onclick="state.view='input'; render();" class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold shadow-md hover:bg-red-700 transition">
+                        + Buat Laporan Baru
+                    </button>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    ${filteredLaporan.length === 0 ? '<p class="text-sm text-slate-500 py-4 text-center">Belum ada laporan harian pada bulan ini.</p>' : 
+                        filteredLaporan.slice(-5).reverse().map(l => `
+                            <div class="py-3 flex items-center justify-between">
+                                <div>
+                                    <p class="font-semibold text-sm text-slate-800">${l.uraian_kegiatan}</p>
+                                    <span class="text-xs text-slate-500">${l.tanggal} •${l.volume}</span>
+                                </div>
+                                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">${l.status}</span>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+        `;
+
+        div.querySelector('#filter-bulan-dash').addEventListener('change', (e) => {
+            state.selectedMonthDashboard = e.target.value;
             render();
+        });
+
+        return div;
+    }
+
+    // --- INPUT LAPORAN VIEW DENGAN FILTER RHK & RENCANA AKSI ---
+    function renderInputView() {
+        const div = document.createElement('div');
+        div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-2xl mx-auto';
+        div.innerHTML = `
+            <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+                <i data-lucide="file-plus" class="w-5 h-5 text-red-600"></i> Form Catatan Laporan Harian
+            </h3>
+            <form id="laporan-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tanggal Kegiatan</label>
+                        <input type="date" id="lap-tanggal" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Volume / Satuan Hasil</label>
+                        <input type="text" id="lap-volume" placeholder="Contoh: 1 Dokumen / 50 KPM" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Jenis Rencana Hasil Kerja (RHK)</label>
+                    <select id="lap-rhk" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm">
+                        <option value="">-- Pilih Rencana Hasil Kerja --</option>
+                        ${REF_RHK_AKSI.map((item, idx) => `<option value="${idx}">${item.rhk}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Pilihan Laporan Harian (Rencana Aksi)</label>
+                    <select id="lap-aksi" required disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm">
+                        <option value="">-- Pilih RHK terlebih dahulu --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Uraian Tugas / Catatan Detail Kegiatan</label>
+                    <textarea id="lap-uraian" rows="3" placeholder="Rincian kegiatan harian..." required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Lokasi Kegiatan</label>
+                    <input type="text" id="lap-lokasi" placeholder="Nama instansi / alamat / lokasi kegiatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Unggah Foto Dokumentasi (Bisa Pilih Banyak)</label>
+                    <input type="file" id="lap-foto" accept="image/*" multiple class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
+                </div>
+                <button type="submit" id="btn-submit-lap" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-600/30 transition">
+                    Simpan Laporan Harian
+                </button>
+            </form>
+        `;
+
+        const selectRhk = div.querySelector('#lap-rhk');
+        const selectAksi = div.querySelector('#lap-aksi');
+
+        selectRhk.addEventListener('change', (e) => {
+            const idx = e.target.value;
+            selectAksi.innerHTML = '<option value="">-- Pilih Rencana Aksi --</option>';
+            if (idx !== "") {
+                selectAksi.disabled = false;
+                selectAksi.className = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm focus:ring-2 focus:ring-red-500";
+                REF_RHK_AKSI[idx].aksi.forEach(act => {
+                    const opt = document.createElement('option');
+                    opt.value = act;
+                    opt.textContent = act;
+                    selectAksi.appendChild(opt);
+                });
+            } else {
+                selectAksi.disabled = true;
+                selectAksi.className = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm";
+            }
+        });
+
+        div.querySelector('#laporan-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-lap');
+            btn.disabled = true;
+            btn.innerText = 'Menyimpan...';
+
+            const fotoInput = document.getElementById('lap-foto');
+            const files = fotoInput.files;
+            let fotoUrls = [];
+
+            const rhkIndex = selectRhk.value;
+            const rhkText = REF_RHK_AKSI[rhkIndex].rhk;
+            const aksiText = selectAksi.value;
+
+            const compressImage = (file) => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 600;
+                            const MAX_HEIGHT = 600;
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                    height *= MAX_WIDTH / width;
+                                    width = MAX_WIDTH;
+                                }
+                            } else {
+                                if (height > MAX_HEIGHT) {
+                                    width *= MAX_HEIGHT / height;
+                                    height = MAX_HEIGHT;
+                                }
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            resolve(canvas.toDataURL('image/jpeg', 0.6));
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            for (let i = 0; i < files.length; i++) {
+                const compressed = await compressImage(files[i]);
+                fotoUrls.push(compressed);
+            }
+
+            await saveLaporanToSupabase(JSON.stringify(fotoUrls), rhkText, aksiText);
+            btn.disabled = false;
+            btn.innerText = 'Simpan Laporan Harian';
+        });
+
+        return div;
+    }
+
+    async function saveLaporanToSupabase(fotoUrlsJson, rhkText, aksiText) {
+        try {
+            if (!supabaseClient) {
+                showNotification('Supabase belum terhubung!', 'error');
+                return;
+            }
+
+            const newLap = {
+                pegawai_id: state.user.id,
+                tanggal: document.getElementById('lap-tanggal').value,
+                rhk: rhkText,
+                rencana_aksi: aksiText,
+                uraian_kegiatan: document.getElementById('lap-uraian').value,
+                volume: document.getElementById('lap-volume').value,
+                lokasi: document.getElementById('lap-lokasi').value,
+                foto_urls: fotoUrlsJson,
+                status: 'Pending'
+            };
+
+            const { error } = await supabaseClient.from('laporan_harian').insert([newLap]);
+            if (error) throw error;
+
+            showNotification('Laporan harian berhasil disimpan!');
+            await fetchLaporanFromSupabase();
+            state.view = 'riwayat';
+            render();
+        } catch (err) {
+            console.error(err);
+            showNotification('Gagal menyimpan laporan ke database.', 'error');
+        }
+    }
+
+    async function fetchLaporanFromSupabase() {
+        if (!supabaseClient || !state.user) return;
+        try {
+            const { data, error } = await supabaseClient
+                .from('laporan_harian')
+                .select('*')
+                .eq('pegawai_id', state.user.id);
+            
+            if (!error && data) {
+                state.laporanList = data;
+                render();
+            }
+        } catch (err) {
+            console.error("Gagal mengambil data laporan", err);
+        }
+    }
+
+    async function deleteLaporanItem(id) {
+        if (!confirm('Apakah Anda yakin ingin menghapus laporan harian ini?')) return;
+        try {
+            const { error } = await supabaseClient.from('laporan_harian').delete().eq('id', id);
+            if (error) throw error;
+            showNotification('Laporan harian berhasil dihapus.');
+            await fetchLaporanFromSupabase();
+        } catch (err) {
+            showNotification('Gagal menghapus laporan.', 'error');
+        }
+    }
+
+    async function deleteLaporanByMonth(monthStr) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus SEMUA laporan pada bulan ${monthStr}? Tindakan ini tidak dapat dibatalkan.`)) return;
+        try {
+            const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id && l.tanggal && l.tanggal.startsWith(monthStr));
+            for (let l of userLaporan) {
+                await supabaseClient.from('laporan_harian').delete().eq('id', l.id);
+            }
+            showNotification(`Semua laporan bulan ${monthStr} berhasil dihapus.`);
+            await fetchLaporanFromSupabase();
+        } catch (err) {
+            showNotification('Gagal menghapus laporan bulanan.', 'error');
+        }
+    }
+
+    function parseFotoUrls(foto_urls) {
+        if (!foto_urls) return [];
+        try {
+            if (typeof foto_urls === 'string' && foto_urls.startsWith('[')) {
+                return JSON.parse(foto_urls);
+            }
+            return [foto_urls];
+        } catch (e) {
+            return [foto_urls];
+        }
+    }
+
+    // --- RIWAYAT VIEW DENGAN FILTER BULAN & HAPUS LAPORAN ---
+    function renderRiwayatView() {
+        const userLaporan = state.laporanList.filter(l => l.pegawai_id === state.user.id);
+        const filteredLaporan = userLaporan.filter(l => {
+            if (!l.tanggal) return false;
+            return l.tanggal.startsWith(state.selectedMonthRiwayat);
+        });
+
+        const div = document.createElement('div');
+        div.className = 'space-y-4';
+        div.innerHTML = `
+            <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-lg">Riwayat Laporan & Unduh Foto JPG</h3>
+                    <p class="text-xs text-slate-500">Filter berdasarkan bulan atau hapus catatan laporan.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-slate-600 uppercase">Pilih Bulan:</label>
+                    <input type="month" id="filter-bulan-riwayat" value="${state.selectedMonthRiwayat}" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-red-500">
+                </div>
+            </div>
+
+            ${filteredLaporan.length > 0 ? `
+                <div class="flex justify-end">
+                    <button id="btn-hapus-bulan" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua Laporan Bulan ${state.selectedMonthRiwayat}
+                    </button>
+                </div>
+            ` : ''}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${filteredLaporan.length === 0 ? '<div class="col-span-2 text-center py-10 text-slate-400 text-sm">Belum ada riwayat laporan pada bulan ini.</div>' :
+                    filteredLaporan.map(l => {
+                        let urls = parseFotoUrls(l.foto_urls);
+                        return `
+                        <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col justify-between relative group">
+                            <button onclick="deleteLaporanItem('${l.id}')" class="absolute top-4 right-4 text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition" title="Hapus Laporan Ini">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                            <div>
+                                <div class="flex items-center justify-between mb-2 pr-8">
+                                    <span class="text-xs font-semibold px-2.5 py-1 bg-red-50 text-red-600 rounded-lg">${l.tanggal}</span>
+                                    <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">${l.status}</span>
+                                </div>
+                                ${l.rhk ? `<p class="text-xs font-bold text-red-700 mb-1">RHK: ${l.rhk}</p>` : ''}
+                                ${l.rencana_aksi ? `<p class="text-xs font-semibold text-slate-700 mb-1">Aksi: ${l.rencana_aksi}</p>` : ''}
+                                <p class="font-medium text-slate-800 text-sm mb-1">${l.uraian_kegiatan}</p>
+                                <p class="text-xs text-slate-500 mb-3">📍 ${l.lokasi} • Volume: ${l.volume}</p>
+                            </div>
+                            <div>
+                                ${urls.length > 0 ? `
+                                    <div class="grid grid-cols-2 gap-2 mb-3">
+                                        ${urls.map((url, idx) => `
+                                            <div class="relative group">
+                                                <img src="${url}" class="w-full h-28 object-cover rounded-xl border border-slate-100">
+                                                <a href="${url}" download="Dokumentasi_${l.tanggal}_${idx + 1}.jpg" class="absolute bottom-1 right-1 bg-slate-900/80 hover:bg-slate-900 text-white p-1.5 rounded-lg text-xs flex items-center gap-1 backdrop-blur-sm transition">
+                                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> JPG ${idx + 1}
+                                                </a>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : '<p class="text-xs text-slate-400 italic mb-3">Tidak ada foto dokumentasi</p>'}
+                            </div>
+                        </div>
+                    `;}).join('')}
+            </div>
+        `;
+
+        div.querySelector('#filter-bulan-riwayat').addEventListener('change', (e) => {
+            state.selectedMonthRiwayat = e.target.value;
+            render();
+        });
+
+        const btnHapusBulan = div.querySelector('#btn-hapus-bulan');
+        if (btnHapusBulan) {
+            btnHapusBulan.addEventListener('click', () => {
+                deleteLaporanByMonth(state.selectedMonthRiwayat);
+            });
         }
 
+        return div;
+    }
+
+    function renderProfilView() {
+        const div = document.createElement('div');
+        div.className = 'glass-card p-6 rounded-2xl shadow-sm max-w-xl mx-auto';
+        div.innerHTML = `
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full mx-auto flex items-center justify-center text-2xl font-bold mb-3">
+                    ${state.user.nama.charAt(0)}
+                </div>
+                <h3 class="font-bold text-slate-900 text-lg">${state.user.nama}</h3>
+                <p class="text-xs text-slate-500">NIP: ${state.user.nip}</p>
+            </div>
+            <div class="space-y-3 text-sm border-t border-slate-100 pt-4">
+                <div class="flex justify-between py-2 border-b border-slate-50">
+                    <span class="text-slate-500">Jabatan</span>
+                    <span class="font-semibold text-slate-800">${state.user.jabatan}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-50">
+                    <span class="text-slate-500">Unit Kerja</span>
+                    <span class="font-semibold text-slate-800">${state.user.unit_kerja}</span>
+                </div>
+                <div class="flex justify-between py-2">
+                    <span class="text-slate-500">Instansi</span>
+                    <span class="font-semibold text-slate-800">Kementerian Sosial RI</span>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    function logout() {
+        state.user = null;
+        state.laporanList = [];
+        state.view = 'login';
+        showNotification('Berhasil keluar akun.');
         render();
-    </script>
-</body>
-</html>
+    }
+
+    render();
+</script>
